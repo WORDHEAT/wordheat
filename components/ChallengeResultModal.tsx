@@ -10,45 +10,22 @@ interface ChallengeResultModalProps {
 }
 
 export const ChallengeResultModal: React.FC<ChallengeResultModalProps> = ({
-    isOpen,
-    challenge,
-    isChallenger,
-    onClose
-}) => {
-    const [showConfetti, setShowConfetti] = useState(false);
-
-    if (!isOpen || !challenge.winner) return null;
-
-    const myName = isChallenger ? challenge.challenger : challenge.opponent;
-    const opponentName = isChallenger ? challenge.opponent : challenge.challenger;
-    const iWon = challenge.winner === myName;
-    const myGuesses = isChallenger ? challenge.challenger_guesses : challenge.opponent_guesses;
-    const opponentGuesses = isChallenger ? challenge.opponent_guesses : challenge.challenger_guesses;
-
-    useEffect(() => {
-        if (isOpen && iWon) {
-            setShowConfetti(true);
-            setTimeout(() => setShowConfetti(false), 3000);
-        }
-    }, [isOpen, iWon]);
-
-    return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-pop">
-            {showConfetti && (
-                <div className="confetti-container fixed inset-0 pointer-events-none">
-                    {[...Array(50)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="confetti"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                animationDelay: `${Math.random() * 0.5}s`,
-                                backgroundColor: ['#fbbf24', '#ef4444', '#3b82f6', '#10b981'][Math.floor(Math.random() * 4)]
-                            }}
-                        />
-                    ))}
-                </div>
-            )}
+        < div className = "fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-pop" >
+        { showConfetti && (
+            <div className="confetti-container fixed inset-0 pointer-events-none">
+                {[...Array(50)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="confetti"
+                        style={{
+                            left: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 0.5}s`,
+                            backgroundColor: ['#fbbf24', '#ef4444', '#3b82f6', '#10b981'][Math.floor(Math.random() * 4)]
+                        }}
+                    />
+                ))}
+            </div>
+        )}
 
             <div className="bg-slate-900 border-2 border-slate-700 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden">
                 {/* Header */}
@@ -119,6 +96,6 @@ export const ChallengeResultModal: React.FC<ChallengeResultModalProps> = ({
           }
         }
       `}</style>
-        </div>
+        </div >
     );
 };
