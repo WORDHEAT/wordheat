@@ -424,10 +424,9 @@ const Game: React.FC = () => {
     if (challengeId && challengeData) {
       // Update challenge with surrender (999 guesses indicates surrender)
       await updateChallengeProgress(challengeId, isChallenger, 999, true);
-      showToast('You surrendered. Opponent wins!', 'info');
 
-      // Navigate back after a moment
-      setTimeout(() => navigate('/home'), 1500);
+      // The realtime subscription will detect both players finished and show result modal
+      // No need to manually navigate - modal will handle it
       return;
     }
 
