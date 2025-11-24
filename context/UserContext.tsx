@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { UserProfile, Language, AppNotification, GameState, SolvedWord, MissionType, DailyMission, ChatMessage } from '../types';
+import { UserProfile, Language, AppNotification, GameState, SolvedWord, MissionType, DailyMission, ChatMessage, Challenge } from '../types';
 import { THEMES } from '../utils/themes';
 import { CATEGORIES } from '../utils/categories';
 import { CONSUMABLES } from '../utils/consumables';
@@ -41,7 +41,7 @@ interface UserContextType {
   getWinCoinReward: () => number;
   getBlitzStartDuration: () => number;
   checkAchievements: (gameState?: GameState) => void;
-  showToast: (message: string, type?: 'success' | 'info' | 'achievement' | 'levelup', icon?: string) => void;
+  showToast: (message: string, type?: 'success' | 'info' | 'achievement' | 'levelup', icon?: string, action?: { label: string; url?: string; onClick?: () => void }) => void;
   removeToast: (id: string) => void;
   markAllRead: () => void;
   clearNotifications: () => void;
@@ -60,6 +60,10 @@ interface UserContextType {
   sendMessage: (to: string, text: string) => void;
   markChatRead: (friend: string) => void;
   deleteChatHistory: (friend: string) => void;
+  createChallenge: (opponent: string, word: string, seed: string) => Promise<Challenge | null>;
+  acceptChallenge: (challengeId: string) => Promise<boolean>;
+  updateChallengeProgress: (challengeId: string, isChallenger: boolean, guesses: number, finished: boolean) => Promise<void>;
+  getChallenge: (challengeId: string) => Promise<Challenge | null>;
   isLoading: boolean;
 }
 
@@ -546,6 +550,100 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addNotification(`Chat history with ${friend} deleted`, 'info');
   };
 
+  // Challenge Functions
+  const createChallenge = async (opponent: string, word: string, seed: string): Promise<Challenge | null> => {
+    if (!userSession) {
+      addNotification('You must be logged in to create challenges', 'info');
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from('challenges')
+      .insert({
+        challenger: profile.username,
+        opponent,
+        word,
+        seed,
+        status: 'pending',
+        created_at: Date.now(),
+        challenger_status: 'waiting',
+        opponent_status: 'invited'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Create challenge error:', error);
+      addNotification('Failed to create challenge', 'info');
+      return null;
+    }
+
+    // Send notification with challenge link
+    sendMessage(opponent, `🔥 I challenge you! ${window.location.origin}#/game?challenge=${data.id}`);
+    addNotification(`Challenge sent to ${opponent}!`, 'success', 'Swords');
+
+    return data as Challenge;
+  };
+
+  const acceptChallenge = async (challengeId: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('challenges')
+      .update({
+        status: 'accepted',
+        opponent_status: 'playing'
+      })
+      .eq('id', challengeId);
+
+    if (error) {
+      console.error('Accept challenge error:', error);
+      addNotification('Failed to accept challenge', 'info');
+      return false;
+    }
+
+    return true;
+  };
+
+  const updateChallengeProgress = async (
+    challengeId: string,
+    isChallenger: boolean,
+    guesses: number,
+    finished: boolean
+  ): Promise<void> => {
+    const updates = isChallenger ? {
+      challenger_status: finished ? 'finished' as const : 'playing' as const,
+      challenger_guesses: guesses,
+      challenger_finished_at: finished ? Date.now() : null
+    } : {
+      opponent_status: finished ? 'finished' as const : 'playing' as const,
+      opponent_guesses: guesses,
+      opponent_finished_at: finished ? Date.now() : null
+    };
+
+    const { error } = await supabase
+      .from('challenges')
+      .update(updates)
+      .eq('id', challengeId);
+
+    if (error) {
+      console.error('Update challenge progress error:', error);
+    }
+  };
+
+  const getChallenge = async (challengeId: string): Promise<Challenge | null> => {
+    const { data, error } = await supabase
+      .from('challenges')
+      .select('*')
+      .eq('id', challengeId)
+      .single();
+
+    if (error) {
+      console.error('Get challenge error:', error);
+      return null;
+    }
+
+    return data as Challenge;
+  };
+
   return (
     <UserContext.Provider value={{
       profile, activeToasts, isAuthModalOpen, openAuthModal, closeAuthModal, updateProfile, logout, deleteAccount,
@@ -554,7 +652,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       claimMission, completeTutorial, getLevel, getNextLevelXp, getHintCost, getWinCoinReward, getBlitzStartDuration,
       checkAchievements, showToast: addNotification, removeToast, markAllRead, clearNotifications, toggleSound,
       toggleHardMode, toggleHaptics, toggleHighContrast, toggleReducedMotion, triggerHaptic, t, addFriend, removeFriend,
-      acceptFriendRequest, declineFriendRequest, getPublicProfile, sendMessage, markChatRead, deleteChatHistory, isLoading
+      acceptFriendRequest, declineFriendRequest, getPublicProfile, sendMessage, markChatRead, deleteChatHistory,
+      createChallenge, acceptChallenge, updateChallengeProgress, getChallenge, isLoading
     }}>
       {children}
     </UserContext.Provider>

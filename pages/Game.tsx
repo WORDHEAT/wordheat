@@ -9,6 +9,8 @@ import { TemperatureBackground } from '../components/TemperatureBackground';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { HelpModal } from '../components/HelpModal';
 import { ShareModal } from '../components/ShareModal';
+import { ChallengeStatusBar } from '../components/ChallengeStatusBar';
+import { ChallengeResultModal } from '../components/ChallengeResultModal';
 import { Icon } from '../components/Icon';
 import {
   generateTargetWord,
@@ -19,7 +21,8 @@ import {
   generateCompassClue
 } from '../services/geminiService';
 import { playGuessSound, playWinSound } from '../utils/sound';
-import { GameState, Guess, Temperature } from '../types';
+import { GameState, Guess, Temperature, Challenge } from '../types';
+import { supabase } from '../lib/supabase';
 import { CONSUMABLES } from '../utils/consumables';
 import { Send, Lightbulb, Flag, RotateCcw, Share2, Home as HomeIcon, AlertTriangle, Loader2, Coins, X, Zap, Backpack } from 'lucide-react';
 
@@ -56,7 +59,10 @@ const Game: React.FC = () => {
     showToast,
     buyItem,
     useItem,
-    t
+    t,
+    getChallenge,
+    acceptChallenge,
+    updateChallengeProgress
   } = useUser();
 
   const navigate = useNavigate();
@@ -67,6 +73,7 @@ const Game: React.FC = () => {
   const category = searchParams.get('category') || 'common';
   const dateParam = searchParams.get('date'); // For daily/archive
   const topicParam = searchParams.get('topic'); // For custom mode
+  const challengeId = searchParams.get('challenge'); // For 1v1 challenges
 
   const [gameState, setGameState] = useState<GameState>({
     targetWord: '',
@@ -92,6 +99,11 @@ const Game: React.FC = () => {
   const [hintLoading, setHintLoading] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+
+  // Challenge State
+  const [challengeData, setChallengeData] = useState<Challenge | null>(null);
+  const [showChallengeResult, setShowChallengeResult] = useState(false);
+  const [isChallenger, setIsChallenger] = useState(false);
 
   // Tutorial State
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
@@ -157,6 +169,120 @@ const Game: React.FC = () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [mode, category, dateParam, topicParam, profile.language]);
+
+  // Load Challenge Data
+  useEffect(() => {
+    const loadChallenge = async () => {
+      if (!challengeId) return;
+
+      const challenge = await getChallenge(challengeId);
+      if (!challenge) {
+        showToast('Challenge not found', 'info');
+        navigate('/home');
+        return;
+      }
+
+      setChallengeData(challenge);
+      setIsChallenger(challenge.challenger === profile.username);
+
+      // Accept challenge if opponent
+      if (challenge.opponent === profile.username && challenge.status === 'pending') {
+        await acceptChallenge(challengeId);
+        showToast('Challenge accepted!', 'success', 'Swords');
+      }
+
+      // Set target word from challenge
+      setGameState(prev => ({
+        ...prev,
+        targetWord: challenge.word,
+        loading: false
+      }));
+    };
+
+    loadChallenge();
+  }, [challengeId]);
+
+  // Subscribe to Challenge Updates
+  useEffect(() => {
+    if (!challengeId) return;
+
+    const channel = supabase
+      .channel(`challenge:${challengeId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'challenges',
+        filter: `id=eq.${challengeId}`
+      }, (payload) => {
+        const updated = payload.new as Challenge;
+        setChallengeData(updated);
+
+        // Show notifications
+        if (updated.status === 'accepted' && isChallenger && challengeData?.status !== 'accepted') {
+          showToast('🎮 Opponent accepted! Game on!', 'success', 'Swords');
+        }
+
+        const isOpponentFinished = isChallenger
+          ? updated.opponent_status === 'finished'
+          : updated.challenger_status === 'finished';
+        const wasOpponentFinished = isChallenger
+          ? challengeData?.opponent_status === 'finished'
+          : challengeData?.challenger_status === 'finished';
+
+        if (isOpponentFinished && !wasOpponentFinished) {
+          showToast('⚡ Opponent finished!', 'info', 'Zap');
+        }
+
+        // Check for winner
+        if (updated.challenger_status === 'finished' && updated.opponent_status === 'finished' && !updated.winner) {
+          determineWinner(updated);
+        }
+
+        // Show result modal when winner is declared
+        if (updated.winner && !challengeData?.winner) {
+          setShowChallengeResult(true);
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [challengeId, isChallenger, challengeData]);
+
+  // Update challenge progress on each guess
+  useEffect(() => {
+    if (!challengeId || !challengeData || gameState.guesses.length === 0) return;
+
+    updateChallengeProgress(
+      challengeId,
+      isChallenger,
+      gameState.guesses.length,
+      gameState.status === 'won'
+    );
+  }, [gameState.guesses.length, gameState.status]);
+
+  const determineWinner = async (challenge: Challenge) => {
+    let winner: string;
+
+    const challengerGuesses = challenge.challenger_guesses || 999;
+    const opponentGuesses = challenge.opponent_guesses || 999;
+
+    if (challengerGuesses < opponentGuesses) {
+      winner = challenge.challenger;
+    } else if (opponentGuesses < challengerGuesses) {
+      winner = challenge.opponent;
+    } else {
+      // Tie on guesses - who finished first?
+      winner = (challenge.challenger_finished_at || 0) < (challenge.opponent_finished_at || 0)
+        ? challenge.challenger
+        : challenge.opponent;
+    }
+
+    // Update winner in database
+    await supabase
+      .from('challenges')
+      .update({ winner, status: 'completed' })
+      .eq('id', challenge.id);
+  };
 
   // Independent Blitz Timer Effect
   useEffect(() => {
@@ -427,6 +553,13 @@ const Game: React.FC = () => {
         </div>
 
         {/* Progress / Heat Bar */}
+        {/* Challenge Status Bar */}
+        {challengeData && (
+          <div className="mb-4">
+            <ChallengeStatusBar challenge={challengeData} isChallenger={isChallenger} />
+          </div>
+        )}
+
         <HeatBar score={gameState.bestScore} temperature={getTemperature(gameState.bestScore)} />
 
         {/* Game Area */}
@@ -741,6 +874,18 @@ const Game: React.FC = () => {
           username={profile.username || 'Player'}
         />
 
+        {/* Challenge Result Modal */}
+        {challengeData && (
+          <ChallengeResultModal
+            isOpen={showChallengeResult}
+            challenge={challengeData}
+            isChallenger={isChallenger}
+            onClose={() => {
+              setShowChallengeResult(false);
+              navigate('/home');
+            }}
+          />
+        )}
       </main>
     </div>
   );

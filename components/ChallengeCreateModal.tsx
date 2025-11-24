@@ -10,7 +10,7 @@ interface ChallengeCreateModalProps {
 }
 
 export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOpen, onClose }) => {
-  const { profile, showToast, sendMessage } = useUser();
+  const { profile, showToast, sendMessage, createChallenge } = useUser();
   const navigate = useNavigate();
   const [gameType, setGameType] = useState<'1v1' | '2v2' | 'battle4'>('1v1');
   const [playMode, setPlayMode] = useState<'local' | 'remote'>('local');
@@ -78,12 +78,20 @@ export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOp
     }
   };
 
-  const sendToFriend = (friendName: string) => {
+  const sendToFriend = async (friendName: string) => {
     if (sentTo.includes(friendName)) return;
 
-    sendMessage(friendName, `🔥 I challenge you! Try to beat my score: ${generatedLink}`);
-    setSentTo(prev => [...prev, friendName]);
-    showToast(`Challenge sent to ${friendName}!`, 'success', 'Send');
+    // Use database challenge system instead of link
+    const encodedWord = word.trim() ? btoa(word.trim().toLowerCase()) : '';
+    const seed = encodedWord || `${Date.now()}`;
+    const actualWord = word.trim() || 'mystery'; // Database needs actual word
+
+    const challenge = await createChallenge(friendName, actualWord, seed);
+
+    if (challenge) {
+      setSentTo(prev => [...prev, friendName]);
+      // Notification is handled by createChallenge
+    }
   };
 
   const reset = () => {
@@ -145,8 +153,8 @@ export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOp
                   <button
                     onClick={() => { setPlayMode('local'); reset(); }}
                     className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${playMode === 'local'
-                        ? 'bg-slate-800 text-white shadow-sm ring-1 ring-white/10'
-                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+                      ? 'bg-slate-800 text-white shadow-sm ring-1 ring-white/10'
+                      : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
                       }`}
                   >
                     <Smartphone size={14} /> Pass & Play
@@ -154,8 +162,8 @@ export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOp
                   <button
                     onClick={() => { setPlayMode('remote'); reset(); }}
                     className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${playMode === 'remote'
-                        ? 'bg-slate-800 text-white shadow-sm ring-1 ring-white/10'
-                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+                      ? 'bg-slate-800 text-white shadow-sm ring-1 ring-white/10'
+                      : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
                       }`}
                   >
                     <Globe2 size={14} /> Create Link

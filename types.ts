@@ -142,6 +142,28 @@ export interface ChatMessage {
   read: boolean;
 }
 
+export interface Challenge {
+  id: string;
+  challenger: string;
+  opponent: string;
+  word: string;
+  seed: string;
+  status: 'pending' | 'accepted' | 'in_progress' | 'completed';
+  created_at: number;
+
+  challenger_score?: number;
+  challenger_guesses?: number;
+  challenger_finished_at?: number;
+  challenger_status: 'waiting' | 'playing' | 'finished';
+
+  opponent_score?: number;
+  opponent_guesses?: number;
+  opponent_finished_at?: number;
+  opponent_status: 'invited' | 'playing' | 'finished';
+
+  winner?: string;
+}
+
 export interface UserProfile {
   username: string;
   email?: string; // Added for account management
