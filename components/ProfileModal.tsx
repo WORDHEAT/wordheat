@@ -151,10 +151,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     if (chatFriend && messageInput.trim()) {
       sendMessage(chatFriend, messageInput);
       setMessageInput('');
-      // Keep keyboard open by refocusing input
-      setTimeout(() => {
-        chatInputRef.current?.focus();
-      }, 0);
     }
   };
 
