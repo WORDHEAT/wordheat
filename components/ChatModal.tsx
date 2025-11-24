@@ -14,6 +14,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
   const [friendInput, setFriendInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
+  const messageContainerRef = useRef<HTMLDivElement>(null);
+  const prevMessageCountRef = useRef<number>(0);
 
   // Reset on open
   useEffect(() => {
@@ -23,12 +25,35 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  // Scroll to bottom
+  // Smart scroll to bottom - only when new messages arrive AND user is near bottom
   useEffect(() => {
-    if (activeFriend && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (!activeFriend) return;
+
+    const currentMessages = profile.messages.filter(m =>
+      (m.from === profile.username && m.to === activeFriend) ||
+      (m.from === activeFriend && m.to === profile.username)
+    );
+
+    const currentMessageCount = currentMessages.length;
+    const hasNewMessage = currentMessageCount > prevMessageCountRef.current;
+
+    if (hasNewMessage && messagesEndRef.current && messageContainerRef.current) {
+      const container = messageContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+      // Only auto-scroll if user was already near the bottom
+      if (isNearBottom || prevMessageCountRef.current === 0) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     }
+
+    prevMessageCountRef.current = currentMessageCount;
   }, [activeFriend, profile.messages]);
+
+  // Reset message count when changing active friend
+  useEffect(() => {
+    prevMessageCountRef.current = 0;
+  }, [activeFriend]);
 
   // Mark read
   useEffect(() => {
@@ -90,7 +115,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
           {activeFriend ? (
             <>
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide overscroll-y-contain touch-action-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div ref={messageContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide overscroll-y-contain touch-action-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {profile.messages
                   .filter(m => (m.from === profile.username && m.to === activeFriend) || (m.from === activeFriend && m.to === profile.username))
                   .sort((a, b) => a.timestamp - b.timestamp)

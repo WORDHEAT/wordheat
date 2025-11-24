@@ -28,6 +28,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
   const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const prevChatMessageCountRef = useRef<number>(0);
 
   // Editing State
   const [isEditing, setIsEditing] = useState(false);
@@ -48,12 +50,36 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     }
   }, [isOpen]);
 
-  // Scroll to bottom of chat
+  // Smart scroll to bottom - only when new messages arrive AND user is near bottom
   useEffect(() => {
-    if (chatFriend && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (!chatFriend) return;
+
+    const myUsername = profile.username || 'Guest';
+    const currentMessages = profile.messages.filter(m =>
+      (m.from === myUsername && m.to === chatFriend) ||
+      (m.from === chatFriend && m.to === myUsername)
+    );
+
+    const currentMessageCount = currentMessages.length;
+    const hasNewMessage = currentMessageCount > prevChatMessageCountRef.current;
+
+    if (hasNewMessage && messagesEndRef.current && chatContainerRef.current) {
+      const container = chatContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+      // Only auto-scroll if user was already near the bottom
+      if (isNearBottom || prevChatMessageCountRef.current === 0) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     }
+
+    prevChatMessageCountRef.current = currentMessageCount;
   }, [chatFriend, profile.messages]);
+
+  // Reset message count when changing chat friend
+  useEffect(() => {
+    prevChatMessageCountRef.current = 0;
+  }, [chatFriend]);
 
   // Mark read when opening chat
   useEffect(() => {
@@ -178,7 +204,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/30 scrollbar-hide overscroll-y-contain touch-action-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/30 scrollbar-hide overscroll-y-contain touch-action-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
             {chatHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-500 opacity-60">
                 <MessageSquare size={48} className="mb-2" />
