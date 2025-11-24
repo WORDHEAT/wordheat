@@ -173,26 +173,31 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/30 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/30 scrollbar-hide overscroll-y-contain">
             {chatHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-500 opacity-60">
                 <MessageSquare size={48} className="mb-2" />
                 <p>Start the conversation!</p>
               </div>
             ) : (
-              chatHistory.map((msg) => {
+              chatHistory.map((msg, index, arr) => {
                 const isMe = msg.from === myUsername;
+                const isLast = index === arr.length - 1;
+                const showTime = isLast || (index < arr.length - 1 && arr[index + 1].timestamp - msg.timestamp > 300000); // Show time if last or gap > 5min
+
                 return (
-                  <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${isMe
+                  <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                    <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${isMe
                       ? 'bg-blue-600 text-white rounded-tr-sm'
                       : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700'
                       }`}>
                       {msg.text}
-                      <div className={`text-[9px] mt-1 text-right opacity-60 ${isMe ? 'text-blue-100' : 'text-slate-400'}`}>
+                    </div>
+                    {showTime && (
+                      <div className={`text-[10px] mt-1 px-1 opacity-50 ${isMe ? 'text-blue-200' : 'text-slate-400'}`}>
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
-                    </div>
+                    )}
                   </div>
                 );
               })
@@ -201,21 +206,22 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
           </div>
 
           {/* Chat Input */}
-          <form onSubmit={handleSendMessage} className="p-4 bg-slate-900 border-t border-slate-800 flex gap-2">
+          <form onSubmit={handleSendMessage} className="p-3 sm:p-4 bg-slate-900 border-t border-slate-800 flex gap-2">
             <input
               type="text"
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
               autoFocus
+              enterKeyHint="send"
             />
             <button
               type="submit"
               disabled={!messageInput.trim()}
-              className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-xl w-10 flex items-center justify-center transition-colors"
+              className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-xl w-12 flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-blue-900/20"
             >
-              <Send size={18} />
+              <Send size={20} />
             </button>
           </form>
         </div>
