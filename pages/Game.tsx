@@ -231,18 +231,36 @@ const Game: React.FC = () => {
         const opponentGuesses = isChallenger
           ? updated.opponent_guesses
           : updated.challenger_guesses;
+        const myGuesses = isChallenger
+          ? updated.challenger_guesses
+          : updated.opponent_guesses;
 
         if (isOpponentFinished && !wasOpponentFinished) {
           if (opponentGuesses === 999) {
             showToast('🏳️ Opponent gave up! You win!', 'success', 'Trophy');
+            // Immediately determine winner if opponent surrendered
+            if (!updated.winner) {
+              (async () => {
+                await determineWinner(updated);
+              })();
+            }
           } else {
             showToast('⚡ Opponent finished!', 'info', 'Zap');
           }
         }
 
-        // Check for winner
+        // If I just surrendered, immediately determine opponent as winner
+        if (myGuesses === 999 && !updated.winner) {
+          (async () => {
+            await determineWinner(updated);
+          })();
+        }
+
+        // Check for winner when both finished
         if (updated.challenger_status === 'finished' && updated.opponent_status === 'finished' && !updated.winner) {
-          determineWinner(updated);
+          (async () => {
+            await determineWinner(updated);
+          })();
         }
 
         // Show result modal when winner is declared
@@ -425,8 +443,8 @@ const Game: React.FC = () => {
       // Update challenge with surrender (999 guesses indicates surrender)
       await updateChallengeProgress(challengeId, isChallenger, 999, true);
 
-      // The realtime subscription will detect both players finished and show result modal
-      // No need to manually navigate - modal will handle it
+      // Immediately show result modal for the surrendering player
+      setShowChallengeResult(true);
       return;
     }
 
