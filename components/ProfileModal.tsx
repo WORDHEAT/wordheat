@@ -598,18 +598,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                             )}
                           </button>
                           <button
-                            onClick={() => handleViewFriend(friendName)}
-                            className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
+                            onClick={(e) => { e.stopPropagation(); handleViewFriend(friendName); }}
+                            className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
                             title="View Profile"
                           >
-                            <Eye size={14} />
+                            <Eye size={18} />
                           </button>
                           <button
-                            onClick={() => removeFriend(friendName)}
-                            className="p-1.5 hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
+                            onClick={(e) => { e.stopPropagation(); removeFriend(friendName); }}
+                            className="p-2 hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
                             title="Remove Friend"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={18} />
                           </button>
                         </div>
                       </div>
