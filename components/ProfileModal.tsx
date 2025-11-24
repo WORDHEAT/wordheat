@@ -45,7 +45,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
       setEditName(profile.username);
       setEditAvatar(profile.avatar);
     }
-  }, [isOpen, profile]);
+  }, [isOpen]);
 
   // Scroll to bottom of chat
   useEffect(() => {
