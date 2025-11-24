@@ -522,7 +522,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(prev => ({ ...prev, messages: [...prev.messages, msg] }));
 
         // Check if message contains a challenge link
-        const challengeMatch = msg.text.match(/#\/game\?mode=challenge[^\s]*/);
+        const challengeMatch = msg.text.match(/#\/game\?challenge=([a-zA-Z0-9-]+)/);
         if (challengeMatch) {
           const challengeUrl = challengeMatch[0];
           addNotification(
