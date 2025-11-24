@@ -53,7 +53,7 @@ export interface Theme {
   price: number;
   description: string;
   bgHome: string;
-  heatColors: string[]; 
+  heatColors: string[];
   accentColor: string;
 }
 
@@ -126,6 +126,11 @@ export interface AppNotification {
   icon?: string;
   timestamp: number;
   read: boolean;
+  action?: {
+    label: string;
+    url?: string;
+    onClick?: () => void;
+  };
 }
 
 export interface ChatMessage {
@@ -152,7 +157,7 @@ export interface UserProfile {
   inventory: Record<string, number>; // Item ID -> Count
   language: Language;
   gamesPlayed: number;
-  wins: number; 
+  wins: number;
   blitzHighScore: number;
   solvedWords: SolvedWord[];
   dailyMissions: DailyMission[];

@@ -248,11 +248,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // --- Actions ---
 
-  const addNotification = (message: string, type: 'success' | 'info' | 'achievement' | 'levelup' = 'info', icon?: string) => {
+
+  const addNotification = (
+    message: string,
+    type: 'success' | 'info' | 'achievement' | 'levelup' = 'info',
+    icon?: string,
+    action?: { label: string; url?: string; onClick?: () => void }
+  ) => {
     const id = Date.now().toString();
-    const newNotif: AppNotification = { id, message, type, icon, timestamp: Date.now(), read: false };
+    const newNotif: AppNotification = { id, message, type, icon, timestamp: Date.now(), read: false, action };
     setActiveToasts(prev => [...prev.slice(-3), newNotif]);
-    setTimeout(() => removeToast(id), 3000);
+    setTimeout(() => removeToast(id), 5000); // Increased from 3s to 5s for actions
     setProfile(prev => ({ ...prev, notifications: [newNotif, ...prev.notifications].slice(0, 30) }));
   };
   const removeToast = (id: string) => setActiveToasts(prev => prev.filter(n => n.id !== id));
@@ -510,7 +516,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           read: false
         };
         setProfile(prev => ({ ...prev, messages: [...prev.messages, msg] }));
-        addNotification(`New message from ${payload.payload.from}`, 'info', 'MessageSquare');
+
+        // Check if message contains a challenge link
+        const challengeMatch = msg.text.match(/#\/game\?mode=challenge[^\s]*/);
+        if (challengeMatch) {
+          const challengeUrl = challengeMatch[0];
+          addNotification(
+            `🔥 ${payload.payload.from} challenged you!`,
+            'info',
+            'Swords',
+            { label: 'Play Now', url: challengeUrl }
+          );
+        } else {
+          addNotification(`New message from ${payload.payload.from}`, 'info', 'MessageSquare');
+        }
       }).subscribe();
 
       return () => { supabase.removeChannel(channel); };
