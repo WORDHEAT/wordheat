@@ -443,8 +443,8 @@ const Game: React.FC = () => {
       // Update challenge with surrender (999 guesses indicates surrender)
       await updateChallengeProgress(challengeId, isChallenger, 999, true);
 
-      // Immediately show result modal for the surrendering player
-      setShowChallengeResult(true);
+      // Don't show modal here - let the realtime subscription show it when winner is determined
+      // This ensures the modal has proper winner data to display
       return;
     }
 
