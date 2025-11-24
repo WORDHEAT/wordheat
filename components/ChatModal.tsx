@@ -54,9 +54,9 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-pop" onClick={onClose}>
+    <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-pop" onClick={onClose}>
       <div
-        className="bg-slate-900/95 border border-slate-700 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden flex flex-col h-[600px] max-h-[85vh]"
+        className="bg-slate-900/95 border-t sm:border border-slate-700 rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl overflow-hidden flex flex-col h-auto max-h-[85vh] sm:h-[600px] sm:max-h-[85vh]"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -103,8 +103,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
                       return (
                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${isMe
-                              ? 'bg-blue-600 text-white rounded-tr-sm'
-                              : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700'
+                            ? 'bg-blue-600 text-white rounded-tr-sm'
+                            : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700'
                             }`}>
                             {msg.text}
                             <div className={`text-[9px] mt-1 text-right opacity-60 ${isMe ? 'text-blue-100' : 'text-slate-400'}`}>
