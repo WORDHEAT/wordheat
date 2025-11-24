@@ -34,8 +34,8 @@ export const Header: React.FC<HeaderProps> = ({ onHelpClick }) => {
   return (
     <>
       <header className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-700/50 px-4 py-3 flex justify-between items-center shadow-lg transition-all">
-        <div 
-          className="flex items-center space-x-3 cursor-pointer group" 
+        <div
+          className="flex items-center space-x-3 cursor-pointer group"
           onClick={() => navigate('/home')}
         >
           <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center text-white shadow-orange-500/20 shadow-lg group-hover:scale-105 transition-transform">
@@ -47,34 +47,34 @@ export const Header: React.FC<HeaderProps> = ({ onHelpClick }) => {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          
-           {/* Level / Profile Badge */}
-           <div 
+
+          {/* Level / Profile Badge */}
+          <div
             onClick={() => setIsProfileOpen(true)}
             className="flex items-center space-x-2 bg-slate-800/80 pr-3 pl-1 py-1 rounded-full border border-slate-700/50 cursor-pointer hover:bg-slate-700 transition-all group max-w-[120px] relative"
             title={t('nav.profile')}
           >
             <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 group-hover:bg-slate-600 border border-slate-600 overflow-hidden">
-               {profile.avatar ? <Icon name={profile.avatar} size={16} /> : <span className="text-[10px] font-bold">{getLevel()}</span>}
+              {profile.avatar ? <Icon name={profile.avatar} size={16} /> : <span className="text-[10px] font-bold">{getLevel()}</span>}
             </div>
             <div className="flex flex-col leading-none overflow-hidden">
-               <span className="text-[10px] text-white font-bold truncate w-full">{profile.username || 'Guest'}</span>
-               <span className="text-[8px] text-slate-400 font-bold tracking-wide">LVL {getLevel()}</span>
+              <span className="text-[10px] text-white font-bold truncate w-full">{profile.username || 'Guest'}</span>
+              <span className="text-[8px] text-slate-400 font-bold tracking-wide">LVL {getLevel()}</span>
             </div>
             {requestCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border border-slate-900 animate-pulse"></span>
+              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border border-slate-900 animate-pulse"></span>
             )}
           </div>
 
           {/* Stats Pills */}
-          <div 
+          <div
             className="hidden md:flex items-center space-x-1.5 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/50 cursor-pointer hover:bg-slate-700 transition-colors"
             onClick={() => setIsShopOpen(true)}
           >
             <Coins size={16} className="text-yellow-400" fill="#facc15" />
             <span className="text-xs sm:text-sm font-semibold text-slate-200">{profile.coins}</span>
           </div>
-          
+
           {/* Language Selector */}
           {location.pathname === '/home' && (
             <div className="relative hidden sm:block">
@@ -94,35 +94,35 @@ export const Header: React.FC<HeaderProps> = ({ onHelpClick }) => {
           <div className="h-6 w-px bg-slate-700 mx-1"></div>
 
           {/* Notifications Button */}
-          <button 
+          <button
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
             className="w-9 h-9 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 hover:border-slate-600 transition-all relative"
             title={t('nav.notifications')}
           >
             <Bell size={18} />
             {unreadCount > 0 && (
-               <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 border border-slate-900 text-[9px] font-bold flex items-center justify-center text-white animate-pop">
-                 {unreadCount > 9 ? '9+' : unreadCount}
-               </span>
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 border border-slate-900 text-[9px] font-bold flex items-center justify-center text-white animate-pop">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
             )}
           </button>
 
-           {/* Chat Button (Replaces Sound Toggle) */}
-           <button 
+          {/* Chat Button (Replaces Sound Toggle) */}
+          <button
             onClick={() => setIsChatOpen(true)}
-            className="w-9 h-9 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 hover:border-slate-600 transition-all relative hidden sm:flex"
+            className="w-9 h-9 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 hover:border-slate-600 transition-all relative flex"
             title="Friends & Chat"
           >
             <MessageSquare size={18} />
             {unreadChatCount > 0 && (
-               <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-indigo-500 border border-slate-900 text-[9px] font-bold flex items-center justify-center text-white animate-pop">
-                 {unreadChatCount > 9 ? '9+' : unreadChatCount}
-               </span>
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-indigo-500 border border-slate-900 text-[9px] font-bold flex items-center justify-center text-white animate-pop">
+                {unreadChatCount > 9 ? '9+' : unreadChatCount}
+              </span>
             )}
           </button>
 
           {/* Archive Button */}
-          <button 
+          <button
             onClick={() => setIsArchiveOpen(true)}
             className="w-9 h-9 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 hover:border-slate-600 transition-all hidden sm:flex"
             title={t('nav.collection')}
@@ -131,16 +131,16 @@ export const Header: React.FC<HeaderProps> = ({ onHelpClick }) => {
           </button>
 
           {/* Shop Button */}
-          <button 
+          <button
             onClick={() => setIsShopOpen(true)}
             className="w-9 h-9 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 hover:border-slate-600 transition-all"
             title={t('nav.shop')}
           >
             <ShoppingBag size={18} />
           </button>
-          
+
           {/* Settings Button */}
-           <button 
+          <button
             onClick={() => setIsSettingsOpen(true)}
             className="w-9 h-9 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 hover:border-slate-600 transition-all"
             title={t('nav.settings')}
@@ -149,7 +149,7 @@ export const Header: React.FC<HeaderProps> = ({ onHelpClick }) => {
           </button>
 
           {/* Help Button */}
-          <button 
+          <button
             onClick={onHelpClick}
             className="w-9 h-9 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 hover:border-slate-600 transition-all"
             title={t('nav.help')}
