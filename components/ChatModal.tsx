@@ -8,7 +8,7 @@ interface ChatModalProps {
 }
 
 export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
-  const { profile, addFriend, removeFriend, sendMessage, markChatRead } = useUser();
+  const { profile, addFriend, removeFriend, sendMessage, markChatRead, deleteChatHistory } = useUser();
   const [activeFriend, setActiveFriend] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [friendInput, setFriendInput] = useState('');
@@ -103,9 +103,25 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
               {activeFriend ? activeFriend : 'Friends & Chat'}
             </h3>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {activeFriend && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete all messages with ${activeFriend}?`)) {
+                    deleteChatHistory(activeFriend);
+                    setActiveFriend(null);
+                  }
+                }}
+                className="w-8 h-8 rounded-full hover:bg-red-900/30 flex items-center justify-center text-slate-400 hover:text-red-400 transition-colors"
+                title="Delete conversation"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+            <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}

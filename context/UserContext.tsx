@@ -58,7 +58,8 @@ interface UserContextType {
   declineFriendRequest: (username: string) => void;
   getPublicProfile: (username: string) => Promise<UserProfile | null>;
   sendMessage: (to: string, text: string) => void;
-  markChatRead: (friendUsername: string) => void;
+  markChatRead: (friend: string) => void;
+  deleteChatHistory: (friend: string) => void;
   isLoading: boolean;
 }
 
@@ -518,6 +519,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const markChatRead = (friend: string) => setProfile(prev => ({ ...prev, messages: prev.messages.map(m => (m.from === friend && !m.read) ? { ...m, read: true } : m) }));
 
+  const deleteChatHistory = (friend: string) => {
+    setProfile(prev => ({
+      ...prev,
+      messages: prev.messages.filter(m => !(m.from === friend || m.to === friend))
+    }));
+    addNotification(`Chat history with ${friend} deleted`, 'info');
+  };
+
   return (
     <UserContext.Provider value={{
       profile, activeToasts, isAuthModalOpen, openAuthModal, closeAuthModal, updateProfile, logout, deleteAccount,
@@ -526,7 +535,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       claimMission, completeTutorial, getLevel, getNextLevelXp, getHintCost, getWinCoinReward, getBlitzStartDuration,
       checkAchievements, showToast: addNotification, removeToast, markAllRead, clearNotifications, toggleSound,
       toggleHardMode, toggleHaptics, toggleHighContrast, toggleReducedMotion, triggerHaptic, t, addFriend, removeFriend,
-      acceptFriendRequest, declineFriendRequest, getPublicProfile, sendMessage, markChatRead, isLoading
+      acceptFriendRequest, declineFriendRequest, getPublicProfile, sendMessage, markChatRead, deleteChatHistory, isLoading
     }}>
       {children}
     </UserContext.Provider>

@@ -17,7 +17,7 @@ const AVATARS = [
 ];
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
-  const { profile, getLevel, updateProfile, openAuthModal, addFriend, removeFriend, acceptFriendRequest, declineFriendRequest, getPublicProfile, sendMessage, markChatRead } = useUser();
+  const { profile, getLevel, updateProfile, openAuthModal, addFriend, removeFriend, acceptFriendRequest, declineFriendRequest, getPublicProfile, sendMessage, markChatRead, deleteChatHistory } = useUser();
   const [activeTab, setActiveTab] = useState<'stats' | 'achievements' | 'perks' | 'friends'>('stats');
 
   // Viewing State
@@ -196,9 +196,23 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                 <h3 className="text-lg font-bold text-white">{chatFriend}</h3>
               </div>
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
-              <X size={20} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (confirm(`Delete all messages with ${chatFriend}?`)) {
+                    deleteChatHistory(chatFriend);
+                    handleCloseChat();
+                  }
+                }}
+                className="w-8 h-8 rounded-full hover:bg-red-900/30 flex items-center justify-center text-slate-400 hover:text-red-400 transition-colors"
+                title="Delete conversation"
+              >
+                <Trash2 size={18} />
+              </button>
+              <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Chat Messages */}

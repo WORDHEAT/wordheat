@@ -28,12 +28,12 @@ const AppContent: React.FC = () => {
       <AuthModal isOpen={isAuthModalOpen} />
 
       {/* Global Notification Overlay */}
-      <div className="fixed bottom-4 left-0 right-0 z-[150] flex flex-col items-center pointer-events-none px-4">
+      <div className="fixed top-4 left-0 right-0 z-[150] flex flex-col items-center pointer-events-none px-4">
         {activeToasts.map(n => (
-          <AchievementToast 
-            key={n.id} 
-            notification={n} 
-            onClose={() => removeToast(n.id)} 
+          <AchievementToast
+            key={n.id}
+            notification={n}
+            onClose={() => removeToast(n.id)}
           />
         ))}
       </div>
