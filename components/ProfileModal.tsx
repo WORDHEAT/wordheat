@@ -149,7 +149,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     ).sort((a, b) => a.timestamp - b.timestamp);
 
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-pop" onClick={onClose}>
+      <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-pop" onClick={onClose}>
         <div
           className="bg-slate-900/95 border border-slate-700 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden flex flex-col h-[600px] max-h-[85vh]"
           onClick={e => e.stopPropagation()}
@@ -185,8 +185,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                 return (
                   <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${isMe
-                        ? 'bg-blue-600 text-white rounded-tr-sm'
-                        : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700'
+                      ? 'bg-blue-600 text-white rounded-tr-sm'
+                      : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700'
                       }`}>
                       {msg.text}
                       <div className={`text-[9px] mt-1 text-right opacity-60 ${isMe ? 'text-blue-100' : 'text-slate-400'}`}>
@@ -367,8 +367,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
                 className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all uppercase tracking-wide whitespace-nowrap relative ${activeTab === tab
-                    ? 'bg-slate-800 text-white shadow-sm ring-1 ring-white/5'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+                  ? 'bg-slate-800 text-white shadow-sm ring-1 ring-white/5'
+                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
                   }`}
               >
                 {tab}
@@ -443,8 +443,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                   <div
                     key={ach.id}
                     className={`p-3 rounded-2xl border flex items-center gap-3 transition-all ${isUnlocked
-                        ? 'bg-slate-800/60 border-emerald-500/20'
-                        : 'bg-slate-800/20 border-slate-800 opacity-50 grayscale'
+                      ? 'bg-slate-800/60 border-emerald-500/20'
+                      : 'bg-slate-800/20 border-slate-800 opacity-50 grayscale'
                       }`}
                   >
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isUnlocked ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-600'}`}>
@@ -472,8 +472,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                   <div
                     key={perk.id}
                     className={`p-4 rounded-2xl border flex items-start gap-3 transition-all ${isUnlocked
-                        ? 'bg-blue-900/10 border-blue-500/20'
-                        : 'bg-slate-800/20 border-slate-800'
+                      ? 'bg-blue-900/10 border-blue-500/20'
+                      : 'bg-slate-800/20 border-slate-800'
                       }`}
                   >
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${isUnlocked ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-slate-800 border-slate-700 text-slate-600'}`}>
@@ -586,11 +586,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
 
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleOpenChat(friendName)}
-                            className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-400 transition-colors relative"
+                            onClick={(e) => { e.stopPropagation(); handleOpenChat(friendName); }}
+                            className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-400 transition-colors relative"
                             title="Message"
                           >
-                            <MessageSquare size={14} />
+                            <MessageSquare size={18} />
                             {unreadCount > 0 && (
                               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold border border-slate-900">
                                 {unreadCount}

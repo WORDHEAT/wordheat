@@ -54,7 +54,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-pop" onClick={onClose}>
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-pop" onClick={onClose}>
       <div
         className="bg-slate-900/95 border border-slate-700 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden flex flex-col h-[600px] max-h-[85vh]"
         onClick={e => e.stopPropagation()}
@@ -63,13 +63,13 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
         <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 shrink-0">
           <div className="flex items-center gap-3">
             {activeFriend ? (
-               <button onClick={() => setActiveFriend(null)} className="w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
-                 <ChevronLeft size={20} />
-               </button>
+              <button onClick={() => setActiveFriend(null)} className="w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                <ChevronLeft size={20} />
+              </button>
             ) : (
-               <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400">
-                 <MessageSquare size={20} strokeWidth={2.5} />
-               </div>
+              <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400">
+                <MessageSquare size={20} strokeWidth={2.5} />
+              </div>
             )}
             <h3 className="text-lg font-bold text-white">
               {activeFriend ? activeFriend : 'Friends & Chat'}
@@ -90,32 +90,31 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
                   .filter(m => (m.from === profile.username && m.to === activeFriend) || (m.from === activeFriend && m.to === profile.username))
                   .sort((a, b) => a.timestamp - b.timestamp)
                   .length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-slate-500 opacity-60">
-                      <MessageSquare size={48} className="mb-2" />
-                      <p>Say hello to {activeFriend}!</p>
-                    </div>
-                  ) : (
-                    profile.messages
-                      .filter(m => (m.from === profile.username && m.to === activeFriend) || (m.from === activeFriend && m.to === profile.username))
-                      .sort((a, b) => a.timestamp - b.timestamp)
-                      .map(msg => {
-                        const isMe = msg.from === profile.username;
-                        return (
-                          <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${
-                              isMe
-                                ? 'bg-blue-600 text-white rounded-tr-sm'
-                                : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700'
+                  <div className="flex flex-col items-center justify-center h-full text-slate-500 opacity-60">
+                    <MessageSquare size={48} className="mb-2" />
+                    <p>Say hello to {activeFriend}!</p>
+                  </div>
+                ) : (
+                  profile.messages
+                    .filter(m => (m.from === profile.username && m.to === activeFriend) || (m.from === activeFriend && m.to === profile.username))
+                    .sort((a, b) => a.timestamp - b.timestamp)
+                    .map(msg => {
+                      const isMe = msg.from === profile.username;
+                      return (
+                        <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${isMe
+                              ? 'bg-blue-600 text-white rounded-tr-sm'
+                              : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700'
                             }`}>
-                              {msg.text}
-                              <div className={`text-[9px] mt-1 text-right opacity-60 ${isMe ? 'text-blue-100' : 'text-slate-400'}`}>
-                                {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                              </div>
+                            {msg.text}
+                            <div className={`text-[9px] mt-1 text-right opacity-60 ${isMe ? 'text-blue-100' : 'text-slate-400'}`}>
+                              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </div>
                           </div>
-                        );
-                      })
-                  )}
+                        </div>
+                      );
+                    })
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -185,33 +184,33 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
                         <div className="w-10 h-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/10 shrink-0 relative">
                           <User size={18} />
                           {unreadCount > 0 && (
-                             <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold border border-slate-900">
-                               {unreadCount}
-                             </div>
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold border border-slate-900">
+                              {unreadCount}
+                            </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-baseline">
                             <span className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors truncate">{friendName}</span>
                             {lastMsg && (
-                               <span className="text-[9px] text-slate-500">{new Date(lastMsg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                              <span className="text-[9px] text-slate-500">{new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             )}
                           </div>
                           <div className="text-xs text-slate-500 truncate">
-                             {lastMsg ? (
-                                <span className={unreadCount > 0 ? 'text-slate-300 font-medium' : ''}>
-                                  {lastMsg.from === profile.username ? 'You: ' : ''}{lastMsg.text}
-                                </span>
-                             ) : (
-                                <span className="italic opacity-50">No messages yet</span>
-                             )}
+                            {lastMsg ? (
+                              <span className={unreadCount > 0 ? 'text-slate-300 font-medium' : ''}>
+                                {lastMsg.from === profile.username ? 'You: ' : ''}{lastMsg.text}
+                              </span>
+                            ) : (
+                              <span className="italic opacity-50">No messages yet</span>
+                            )}
                           </div>
                         </div>
                         <button
-                           onClick={(e) => { e.stopPropagation(); removeFriend(friendName); }}
-                           className="p-2 text-slate-600 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                          onClick={(e) => { e.stopPropagation(); removeFriend(friendName); }}
+                          className="p-2 text-slate-600 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                         >
-                           <Trash2 size={14} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     );
