@@ -90,7 +90,10 @@ export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOp
 
     if (challenge) {
       setSentTo(prev => [...prev, friendName]);
-      // Notification is handled by createChallenge
+      // Navigate challenger to the game
+      navigate(`/game?challenge=${challenge.id}`);
+      onClose();
+      reset();
     }
   };
 
