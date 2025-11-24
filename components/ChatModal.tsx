@@ -69,6 +69,10 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
     if (activeFriend && messageInput.trim()) {
       sendMessage(activeFriend, messageInput);
       setMessageInput('');
+      // Keep keyboard open without scrolling
+      setTimeout(() => {
+        messageInputRef.current?.focus({ preventScroll: true });
+      }, 0);
     }
   };
 
