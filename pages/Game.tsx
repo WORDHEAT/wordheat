@@ -238,29 +238,21 @@ const Game: React.FC = () => {
         if (isOpponentFinished && !wasOpponentFinished) {
           if (opponentGuesses === 999) {
             showToast('🏳️ Opponent gave up! You win!', 'success', 'Trophy');
-            // Immediately determine winner if opponent surrendered
-            if (!updated.winner) {
-              (async () => {
-                await determineWinner(updated);
-              })();
-            }
           } else {
             showToast('⚡ Opponent finished!', 'info', 'Zap');
           }
         }
 
-        // If I just surrendered, immediately determine opponent as winner
-        if (myGuesses === 999 && !updated.winner) {
-          (async () => {
-            await determineWinner(updated);
-          })();
-        }
+        // If either player surrendered OR both finished, determine winner
+        const shouldDetermineWinner = (
+          (myGuesses === 999 || opponentGuesses === 999 ||
+            (updated.challenger_status === 'finished' && updated.opponent_status === 'finished'))
+          && !updated.winner
+        );
 
-        // Check for winner when both finished
-        if (updated.challenger_status === 'finished' && updated.opponent_status === 'finished' && !updated.winner) {
-          (async () => {
-            await determineWinner(updated);
-          })();
+        if (shouldDetermineWinner) {
+          // Call determineWinner which will update DB - realtime will fire again with winner
+          determineWinner(updated);
         }
 
         // Show result modal when winner is declared
