@@ -289,6 +289,7 @@ const Game: React.FC = () => {
   }, [gameState.guesses.length, gameState.status]);
 
   const determineWinner = async (challenge: Challenge) => {
+    console.log('🏆 determineWinner CALLED with:', challenge);
     let winner: string;
 
     const challengerGuesses = challenge.challenger_guesses || 999;
@@ -305,11 +306,24 @@ const Game: React.FC = () => {
         : challenge.opponent;
     }
 
-    // Update winner in database
-    await supabase
-      .from('challenges')
-      .update({ winner, status: 'completed' })
-      .eq('id', challenge.id);
+    console.log('🏆 Winner determined:', winner, 'Updating database...');
+
+    try {
+      // Update winner in database
+      const { data, error } = await supabase
+        .from('challenges')
+        .update({ winner, status: 'completed' })
+        .eq('id', challenge.id)
+        .select();
+
+      if (error) {
+        console.error('❌ Error updating winner in database:', error);
+      } else {
+        console.log('✅ Winner updated successfully in database:', data);
+      }
+    } catch (err) {
+      console.error('❌ Exception updating winner:', err);
+    }
   };
 
   // Independent Blitz Timer Effect
