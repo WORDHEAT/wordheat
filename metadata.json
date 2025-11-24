@@ -1,0 +1,5 @@
+{
+  "name": "WordHeat",
+  "description": "A multilingual semantic puzzle game where you find the secret word by guessing meanings, not spellings.",
+  "requestFramePermissions": []
+}
