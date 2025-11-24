@@ -13,6 +13,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
   const [messageInput, setMessageInput] = useState('');
   const [friendInput, setFriendInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
 
   // Reset on open
   useEffect(() => {
@@ -43,6 +44,10 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
     if (activeFriend && messageInput.trim()) {
       sendMessage(activeFriend, messageInput);
       setMessageInput('');
+      // Keep keyboard open by refocusing input
+      setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 0);
     }
   };
 
@@ -85,7 +90,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
           {activeFriend ? (
             <>
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide overscroll-y-contain">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide overscroll-y-contain touch-action-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {profile.messages
                   .filter(m => (m.from === profile.username && m.to === activeFriend) || (m.from === activeFriend && m.to === profile.username))
                   .sort((a, b) => a.timestamp - b.timestamp)
@@ -126,6 +131,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
               {/* Input Area */}
               <form onSubmit={handleSendMessage} className="p-3 sm:p-4 bg-slate-900 border-t border-slate-800 flex gap-2 shrink-0">
                 <input
+                  ref={messageInputRef}
                   type="text"
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}

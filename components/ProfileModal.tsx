@@ -27,6 +27,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
   const [chatFriend, setChatFriend] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
 
   // Editing State
   const [isEditing, setIsEditing] = useState(false);
@@ -124,6 +125,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     if (chatFriend && messageInput.trim()) {
       sendMessage(chatFriend, messageInput);
       setMessageInput('');
+      // Keep keyboard open by refocusing input
+      setTimeout(() => {
+        chatInputRef.current?.focus();
+      }, 0);
     }
   };
 
@@ -173,7 +178,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/30 scrollbar-hide overscroll-y-contain">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/30 scrollbar-hide overscroll-y-contain touch-action-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
             {chatHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-500 opacity-60">
                 <MessageSquare size={48} className="mb-2" />
@@ -208,6 +213,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
           {/* Chat Input */}
           <form onSubmit={handleSendMessage} className="p-3 sm:p-4 bg-slate-900 border-t border-slate-800 flex gap-2">
             <input
+              ref={chatInputRef}
               type="text"
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
