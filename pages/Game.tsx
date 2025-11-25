@@ -260,8 +260,33 @@ const Game: React.FC = () => {
         );
 
         if (shouldDetermineWinner) {
-          console.log('🏆 DETERMINING WINNER:', { myGuesses, opponentGuesses });
-          // Call determineWinner which will update DB - realtime will fire again with winner
+          // Determine winner locally
+          let winner: string;
+          const challengerGuesses = updated.challenger_guesses || 999;
+          const opponentGuesses = updated.opponent_guesses || 999;
+
+          console.log('🏆 DETERMINING WINNER:', { myGuesses, opponentGuesses, challengerGuesses });
+
+          if (challengerGuesses < opponentGuesses) {
+            winner = updated.challenger;
+          } else if (opponentGuesses < challengerGuesses) {
+            winner = updated.opponent;
+          } else {
+            winner = (updated.challenger_finished_at || 0) < (updated.opponent_finished_at || 0)
+              ? updated.challenger
+              : updated.opponent;
+          }
+
+          console.log('🏆 Winner:', winner, '- Showing modal immediately');
+
+          // Update local state with winner
+          const updatedWithWinner = { ...updated, winner, status: 'completed' as const };
+          setChallengeData(updatedWithWinner);
+
+          // Show modal immediately
+          setShowChallengeResult(true);
+
+          // Update DB in background
           determineWinner(updated);
         }
 
