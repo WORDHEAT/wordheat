@@ -7,11 +7,13 @@ import { Language, SemanticResponse, HintResponse, Guess } from '../types';
 // For this demo, we use the environment variable directly as per instructions.
 
 const getAiClient = () => {
-  // Defensive check to prevent ReferenceError in environments without process
-  if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Use Vite's environment variable system
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  if (apiKey) {
+    return new GoogleGenAI({ apiKey });
   }
-  throw new Error("API_KEY is missing. Please set it in the environment.");
+  throw new Error("VITE_GEMINI_API_KEY is missing. Please set it in your .env file.");
 };
 
 const MODEL_NAME = 'gemini-2.5-flash';
@@ -19,7 +21,7 @@ const MODEL_NAME = 'gemini-2.5-flash';
 // Helper to clean markdown code blocks from JSON responses
 const cleanJson = (text: string): string => {
   if (!text) return '{}';
-  
+
   // 1. Try to find markdown code blocks
   const match = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/```\s*([\s\S]*?)\s*```/);
   if (match) return match[1];
@@ -30,7 +32,7 @@ const cleanJson = (text: string): string => {
   if (start !== -1 && end !== -1) {
     return text.substring(start, end + 1);
   }
-  
+
   // 3. Fallback to original text
   return text;
 };
@@ -38,7 +40,7 @@ const cleanJson = (text: string): string => {
 export const generateTargetWord = async (language: Language, seed?: string, category?: string): Promise<string> => {
   try {
     const ai = getAiClient();
-    
+
     let basePrompt = "";
     if (category && category !== 'common') {
       // Enhanced prompt to handle both preset IDs and custom user topics
@@ -53,7 +55,7 @@ export const generateTargetWord = async (language: Language, seed?: string, cate
     }
 
     // Use the provided seed directly. It should be YYYY-MM-DD format for consistency.
-    const prompt = seed 
+    const prompt = seed
       ? `Generate the "Daily Word" for the date seed "${seed}" in ${language}. It must be a common, simple noun (singular). Return only the word.`
       : `${basePrompt} Return only the word.`;
 
@@ -123,7 +125,7 @@ export const calculateSimilarity = async (target: string, guess: string, languag
     });
 
     const data = JSON.parse(cleanJson(response.text || '{}'));
-    
+
     // Ensure score is 1 if it's solved (handled in UI, but good for data consistency)
     const score = data.isMatch ? 1 : (data.score ?? 0);
 
@@ -139,20 +141,20 @@ export const calculateSimilarity = async (target: string, guess: string, languag
 };
 
 export const generateHint = async (
-  target: string, 
-  language: Language, 
+  target: string,
+  language: Language,
   type: 'word' | 'sentence',
   previousHints: string[] = []
 ): Promise<string> => {
   try {
     const ai = getAiClient();
-    
-    const prevHintsStr = previousHints.length > 0 
-      ? `NOTE: The user has already received these hints, DO NOT repeat similar information or words: ${previousHints.join('; ')}` 
+
+    const prevHintsStr = previousHints.length > 0
+      ? `NOTE: The user has already received these hints, DO NOT repeat similar information or words: ${previousHints.join('; ')}`
       : '';
 
     let prompt = '';
-    
+
     if (type === 'word') {
       prompt = `
         The user is trying to guess the word "${target}" in ${language}.
@@ -207,7 +209,7 @@ export const generateCompassClue = async (target: string, language: Language): P
       contents: prompt,
       config: { responseMimeType: 'text/plain' }
     });
-    
+
     return response.text?.trim() || "sky";
   } catch (error) {
     console.error("Error generating compass clue:", error);
@@ -219,13 +221,13 @@ export const getDefinition = async (word: string, language: Language): Promise<s
   try {
     const ai = getAiClient();
     const prompt = `Provide a short, one-sentence dictionary definition for the word "${word}" in ${language}.`;
-    
+
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
       contents: prompt,
       config: { responseMimeType: 'text/plain' }
     });
-    
+
     return response.text || "Definition unavailable.";
   } catch (error) {
     console.error("Error fetching definition:", error);
@@ -244,7 +246,7 @@ export const getRelatedWords = async (target: string, language: Language): Promi
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
       contents: prompt,
-      config: { 
+      config: {
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
@@ -270,7 +272,7 @@ export const generateGameRecap = async (target: string, guesses: Guess[], langua
     const sortedGuesses = [...guesses].sort((a, b) => a.timestamp - b.timestamp);
     // Take first few and best few to save tokens
     const guessList = sortedGuesses.map(g => `${g.word} (${g.temperature})`).join(', ');
-    
+
     const prompt = `
       The user just finished a game of guessing the word "${target}" in ${language}.
       Here is their guess history: ${guessList}.
