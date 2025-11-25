@@ -127,16 +127,39 @@ const MessageList = ({
   messages,
   username,
   activeFriend,
-  messagesEndRef
 }: {
   messages: any[];
   username: string;
   activeFriend: string;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
 }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   const filteredMessages = messages
     .filter(m => (m.from === username && m.to === activeFriend) || (m.from === activeFriend && m.to === username))
     .sort((a, b) => a.timestamp - b.timestamp);
+
+  // Instant scroll to bottom on mount or friend change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      setIsInitialLoad(false);
+    }
+  }, [activeFriend]);
+
+  // Smooth scroll on new messages
+  useEffect(() => {
+    if (scrollRef.current && !isInitialLoad) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      const lastMessage = filteredMessages[filteredMessages.length - 1];
+      const isFromMe = lastMessage?.from === username;
+
+      if (isNearBottom || isFromMe) {
+        scrollRef.current.scrollTo({ top: scrollHeight, behavior: 'smooth' });
+      }
+    }
+  }, [filteredMessages.length, username]);
 
   if (filteredMessages.length === 0) {
     return (
@@ -151,7 +174,10 @@ const MessageList = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+    <div
+      ref={scrollRef}
+      className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent scroll-smooth"
+    >
       {filteredMessages.map((msg, index, arr) => {
         const isMe = msg.from === username;
         const isLast = index === arr.length - 1;
@@ -163,8 +189,8 @@ const MessageList = ({
             <div className={`max-w-[85%] relative group ${isMe ? 'items-end' : 'items-start'}`}>
               <div
                 className={`px-4 py-2.5 text-sm leading-relaxed shadow-md transition-all ${isMe
-                    ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-2xl rounded-tr-sm'
-                    : 'bg-slate-800 text-slate-200 rounded-2xl rounded-tl-sm border border-slate-700'
+                  ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-2xl rounded-tr-sm'
+                  : 'bg-slate-800 text-slate-200 rounded-2xl rounded-tl-sm border border-slate-700'
                   } ${isFirstInGroup ? 'mt-2' : 'mt-1'}`}
               >
                 {msg.text}
@@ -178,7 +204,6 @@ const MessageList = ({
           </div>
         );
       })}
-      <div ref={messagesEndRef} />
     </div>
   );
 };
@@ -190,9 +215,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
   const [activeFriend, setActiveFriend] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [friendInput, setFriendInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messageInputRef = useRef<HTMLInputElement>(null);
-
   // Reset on open
   useEffect(() => {
     if (isOpen) {
@@ -201,12 +223,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    if (activeFriend && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [activeFriend, profile.messages]);
+  const messageInputRef = useRef<HTMLInputElement>(null);
 
   // Mark read
   useEffect(() => {
@@ -299,7 +316,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
                 messages={profile.messages}
                 username={profile.username}
                 activeFriend={activeFriend}
-                messagesEndRef={messagesEndRef}
               />
 
               {/* Input Area */}
