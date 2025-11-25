@@ -243,10 +243,13 @@ const Game: React.FC = () => {
           }
         }
 
-        // If either player surrendered OR both finished, determine winner
+        // Determine winner when:
+        // 1. One player surrenders (999 guesses)
+        // 2. One player wins (finished status)
+        // 3. Both players finish
         const shouldDetermineWinner = (
           (myGuesses === 999 || opponentGuesses === 999 ||
-            (updated.challenger_status === 'finished' && updated.opponent_status === 'finished'))
+            updated.challenger_status === 'finished' || updated.opponent_status === 'finished')
           && !updated.winner
         );
 
@@ -255,15 +258,25 @@ const Game: React.FC = () => {
           let winner: string;
           const challengerGuesses = updated.challenger_guesses || 999;
           const opponentGuesses = updated.opponent_guesses || 999;
+          const challengerFinished = updated.challenger_status === 'finished';
+          const opponentFinished = updated.opponent_status === 'finished';
 
-          if (challengerGuesses < opponentGuesses) {
-            winner = updated.challenger;
-          } else if (opponentGuesses < challengerGuesses) {
-            winner = updated.opponent;
+          // If only one player finished, they win (unless they surrendered and opponent has fewer guesses)
+          if (challengerFinished && !opponentFinished) {
+            winner = challengerGuesses === 999 ? updated.opponent : updated.challenger;
+          } else if (opponentFinished && !challengerFinished) {
+            winner = opponentGuesses === 999 ? updated.challenger : updated.opponent;
           } else {
-            winner = (updated.challenger_finished_at || 0) < (updated.opponent_finished_at || 0)
-              ? updated.challenger
-              : updated.opponent;
+            // Both finished - compare guesses
+            if (challengerGuesses < opponentGuesses) {
+              winner = updated.challenger;
+            } else if (opponentGuesses < challengerGuesses) {
+              winner = updated.opponent;
+            } else {
+              winner = (updated.challenger_finished_at || 0) < (updated.opponent_finished_at || 0)
+                ? updated.challenger
+                : updated.opponent;
+            }
           }
 
           // Update local state with winner
