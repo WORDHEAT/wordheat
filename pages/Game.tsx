@@ -215,15 +215,6 @@ const Game: React.FC = () => {
         filter: `id=eq.${challengeId}`
       }, (payload) => {
         const updated = payload.new as Challenge;
-        console.log('📡 REALTIME UPDATE:', {
-          challenger_guesses: updated.challenger_guesses,
-          opponent_guesses: updated.opponent_guesses,
-          challenger_status: updated.challenger_status,
-          opponent_status: updated.opponent_status,
-          winner: updated.winner,
-          status: updated.status
-        });
-
         setChallengeData(updated);
 
         // Show notifications
@@ -265,8 +256,6 @@ const Game: React.FC = () => {
           const challengerGuesses = updated.challenger_guesses || 999;
           const opponentGuesses = updated.opponent_guesses || 999;
 
-          console.log('🏆 DETERMINING WINNER:', { myGuesses, opponentGuesses, challengerGuesses });
-
           if (challengerGuesses < opponentGuesses) {
             winner = updated.challenger;
           } else if (opponentGuesses < challengerGuesses) {
@@ -276,8 +265,6 @@ const Game: React.FC = () => {
               ? updated.challenger
               : updated.opponent;
           }
-
-          console.log('🏆 Winner:', winner, '- Showing modal immediately');
 
           // Update local state with winner
           const updatedWithWinner = { ...updated, winner, status: 'completed' as const };
@@ -292,7 +279,6 @@ const Game: React.FC = () => {
 
         // Show result modal when winner is declared
         if (updated.winner && !challengeData?.winner) {
-          console.log('🎉 WINNER DECLARED! Opening modal:', updated.winner);
           setShowChallengeResult(true);
         }
       })
@@ -314,7 +300,6 @@ const Game: React.FC = () => {
   }, [gameState.guesses.length, gameState.status]);
 
   const determineWinner = async (challenge: Challenge) => {
-    console.log('🏆 determineWinner CALLED with:', challenge);
     let winner: string;
 
     const challengerGuesses = challenge.challenger_guesses || 999;
@@ -331,11 +316,9 @@ const Game: React.FC = () => {
         : challenge.opponent;
     }
 
-    console.log('🏆 Winner determined:', winner, 'Updating database...');
-
     try {
       // Update winner in database
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('challenges')
         .update({ winner, status: 'completed' })
         .eq('id', challenge.id)
@@ -343,11 +326,9 @@ const Game: React.FC = () => {
 
       if (error) {
         console.error('❌ Error updating winner in database:', error);
-      } else {
-        console.log('✅ Winner updated successfully in database:', data);
       }
     } catch (err) {
-      console.error('❌ Exception updating winner:', err);
+      console.error('Exception updating winner:', err);
     }
   };
 
@@ -482,10 +463,8 @@ const Game: React.FC = () => {
 
     // Handle challenge mode surrender
     if (challengeId && challengeData) {
-      console.log('🏳️ SURRENDER: Updating challenge progress with 999 guesses');
       // Update challenge with surrender (999 guesses indicates surrender)
       await updateChallengeProgress(challengeId, isChallenger, 999, true);
-      console.log('🏳️ SURRENDER: Update complete, waiting for realtime to trigger modal');
 
       // Don't show modal here - let the realtime subscription show it when winner is determined
       // This ensures the modal has proper winner data to display
