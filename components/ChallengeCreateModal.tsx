@@ -85,15 +85,25 @@ export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOp
     const encodedWord = word.trim() ? btoa(word.trim().toLowerCase()) : '';
     const seed = encodedWord || `${Date.now()}`;
     const actualWord = word.trim() || 'mystery'; // Database needs actual word
+    const isSecretWord = !!word.trim();
 
-    const challenge = await createChallenge(friendName, actualWord, seed);
+    const challenge = await createChallenge(friendName, actualWord, seed, isSecretWord);
 
     if (challenge) {
       setSentTo(prev => [...prev, friendName]);
-      // Navigate challenger to the game
-      navigate(`/game?challenge=${challenge.id}`);
-      onClose();
-      reset();
+
+      if (isSecretWord) {
+        // If I set a secret word, I am the "Setter" - navigate to spectator mode
+        showToast(`Challenge sent! Watch ${friendName} solve it.`, 'success', 'Swords');
+        navigate(`/game?challenge=${challenge.id}`);
+        onClose();
+        reset();
+      } else {
+        // If random word, we both play
+        navigate(`/game?challenge=${challenge.id}`);
+        onClose();
+        reset();
+      }
     }
   };
 
