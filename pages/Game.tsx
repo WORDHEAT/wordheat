@@ -997,7 +997,10 @@ const Game: React.FC = () => {
                 }}
               />
             )}
-          </main>
+          </>
+        )}
+
+      </main>
     </div>
   );
 };
