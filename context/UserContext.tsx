@@ -60,7 +60,7 @@ interface UserContextType {
   sendMessage: (to: string, text: string) => void;
   markChatRead: (friend: string) => void;
   deleteChatHistory: (friend: string) => void;
-  createChallenge: (opponent: string, word: string, seed: string) => Promise<Challenge | null>;
+  createChallenge: (opponent: string, word: string, seed: string, isSecretWord?: boolean) => Promise<Challenge | null>;
   acceptChallenge: (challengeId: string) => Promise<boolean>;
   updateChallengeProgress: (challengeId: string, isChallenger: boolean, guesses: number, finished: boolean) => Promise<void>;
   getChallenge: (challengeId: string) => Promise<Challenge | null>;
@@ -551,7 +551,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Challenge Functions
-  const createChallenge = async (opponent: string, word: string, seed: string): Promise<Challenge | null> => {
+  const createChallenge = async (opponent: string, word: string, seed: string, isSecretWord: boolean = false): Promise<Challenge | null> => {
     if (!userSession) {
       addNotification('You must be logged in to create challenges', 'info');
       return null;
@@ -566,7 +566,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         seed,
         status: 'pending',
         created_at: Date.now(),
-        challenger_status: 'waiting',
+        challenger_status: isSecretWord ? 'finished' : 'waiting',
+        challenger_guesses: isSecretWord ? 0 : null, // 0 indicates setter mode
+        challenger_finished_at: isSecretWord ? Date.now() : null,
         opponent_status: 'invited'
       })
       .select()

@@ -597,360 +597,407 @@ const Game: React.FC = () => {
 
       <Header onHelpClick={() => setShowHelp(true)} />
 
+      <Header onHelpClick={() => setShowHelp(true)} />
+
       <main className="flex-1 w-full max-w-2xl mx-auto p-4 flex flex-col relative z-10">
 
-        {/* Top Bar: Mode & Timer/Score */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-2">
-            <button onClick={() => navigate('/home')} className="p-2 rounded-full bg-slate-800/50 hover:bg-slate-700 transition-colors">
-              <HomeIcon size={16} />
-            </button>
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 bg-slate-900/50 px-2 py-1 rounded border border-slate-800">
-              {mode === 'unlimited' ? (category === 'common' ? 'Quick Play' : category) : mode}
-            </span>
-          </div>
-          {mode === 'blitz' && (
-            <div className={`text-xl font-mono font-bold ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
-              {timeLeft}s
+        {/* Spectator Mode for Setter */}
+        {challengeData && isChallenger && challengeData.challenger_status === 'finished' && challengeData.challenger_guesses === 0 && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center animate-pop">
+            <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-purple-500/20 mb-6">
+              <Icon name="Swords" size={48} strokeWidth={1.5} />
             </div>
-          )}
-        </div>
+            <h2 className="text-3xl font-black text-white mb-2">Challenge Sent!</h2>
+            <p className="text-slate-400 mb-8 max-w-xs">
+              You set the secret word <span className="text-white font-bold">"{gameState.targetWord}"</span>.
+              <br />Waiting for <span className="text-blue-400 font-bold">{challengeData.opponent}</span> to solve it...
+            </p>
 
-        {/* Progress / Heat Bar */}
-        {/* Challenge Status Bar */}
-        {challengeData && (
-          <div className="mb-4">
-            <ChallengeStatusBar challenge={challengeData} isChallenger={isChallenger} />
+            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl w-full max-w-sm">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-xs font-bold uppercase text-slate-500">Opponent Status</span>
+                <span className={`px-2 py-1 rounded text-xs font-bold ${challengeData.opponent_status === 'playing' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-500'}`}>
+                  {challengeData.opponent_status === 'playing' ? 'Playing Now' : 'Invited'}
+                </span>
+              </div>
+
+              {challengeData.opponent_status === 'playing' && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Guesses made:</span>
+                    <span className="text-white font-bold">{challengeData.opponent_guesses || 0}</span>
+                  </div>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 animate-pulse w-full origin-left scale-x-50"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => navigate('/home')}
+              className="mt-8 text-slate-500 hover:text-white font-bold text-sm transition-colors"
+            >
+              Back to Home
+            </button>
           </div>
         )}
 
-        <HeatBar score={gameState.bestScore} temperature={getTemperature(gameState.bestScore)} />
-
-        {/* Game Area */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide mb-4 min-h-[200px] pb-20">
-
-          {/* Loading State */}
-          {gameState.loading && (
-            <div className="flex flex-col items-center justify-center h-40 gap-4">
-              <Loader2 size={32} className="animate-spin text-blue-500" />
-              <p className="text-slate-400 text-sm animate-pulse">Generating semantic field...</p>
-            </div>
-          )}
-
-          {/* Hints Display Stack */}
-          {gameState.hints.length > 0 && (
-            <div className="mb-4 space-y-2">
-              {gameState.hints.map((h, idx) => (
-                <div key={idx} className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex gap-3 items-start animate-pop">
-                  <Lightbulb size={16} className="text-yellow-500 shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <span className="text-[10px] font-bold uppercase text-yellow-600/80 block mb-0.5">
-                      {h.type === 'word' ? 'Word Hint' : 'Sentence Hint'}
-                    </span>
-                    <div className="text-sm text-yellow-100 italic">"{h.text}"</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Win/Loss State */}
-          {gameState.status !== 'playing' && (
-            <div className="mb-6 p-6 bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl text-center animate-pop shadow-2xl">
-              <h2 className="text-3xl font-black mb-2">
-                {gameState.status === 'won' ? 'VICTORY!' : 'GAME OVER'}
-              </h2>
-              <div className="text-sm text-slate-400 mb-4">The secret word was:</div>
-              <div className="text-4xl font-black bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-6 uppercase tracking-widest">
-                {gameState.targetWord}
-              </div>
-
-              {gameState.status === 'won' && gameState.recap && (
-                <div className="text-sm text-slate-300 italic mb-6 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                  "{gameState.recap}"
-                </div>
-              )}
-
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={() => window.location.reload()}
-                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all flex items-center gap-2"
-                >
-                  <RotateCcw size={18} /> Play Again
+        {/* Normal Game View */}
+        {!(challengeData && isChallenger && challengeData.challenger_status === 'finished' && challengeData.challenger_guesses === 0) && (
+          <>
+            {/* Top Bar: Mode & Timer/Score */}
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <button onClick={() => navigate('/home')} className="p-2 rounded-full bg-slate-800/50 hover:bg-slate-700 transition-colors">
+                  <HomeIcon size={16} />
                 </button>
-                <button
-                  onClick={handleShare}
-                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all flex items-center gap-2 border border-slate-600"
-                >
-                  <Share2 size={18} /> Share
-                </button>
-              </div>
-
-              {/* Related Words */}
-              {gameState.relatedWords && gameState.relatedWords.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-slate-700">
-                  <div className="text-xs font-bold uppercase text-slate-500 mb-3">Similar Words</div>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {gameState.relatedWords.map(w => (
-                      <span key={w} className="px-2 py-1 bg-slate-900 rounded text-xs text-slate-300 border border-slate-800">
-                        {w}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Guess History */}
-          <div className="space-y-3">
-            {sortedGuesses.map((guess, idx) => (
-              <GuessRow
-                key={guess.timestamp}
-                guess={guess}
-                isBest={guess.score === gameState.bestScore && guess.score > 0}
-                listIndex={idx + 1}
-              />
-            ))}
-
-          </div>
-        </div>
-
-        {/* Input Area - Fixed Bottom */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-950/80 backdrop-blur-md border-t border-slate-800">
-          <div className="max-w-2xl mx-auto">
-
-            {/* Masked Word (From Letter Spy) */}
-            {maskedWord && gameState.status === 'playing' && (
-              <div className="text-center mb-3 animate-pop">
-                <span className="inline-block px-4 py-1.5 bg-slate-900 border border-emerald-500/30 rounded-lg text-emerald-400 font-mono text-lg font-bold tracking-[0.3em] shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-                  {maskedWord}
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-400 bg-slate-900/50 px-2 py-1 rounded border border-slate-800">
+                  {mode === 'unlimited' ? (category === 'common' ? 'Quick Play' : category) : mode}
                 </span>
+              </div>
+              {mode === 'blitz' && (
+                <div className={`text-xl font-mono font-bold ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
+                  {timeLeft}s
+                </div>
+              )}
+            </div>
+
+            {/* Progress / Heat Bar */}
+            {/* Challenge Status Bar */}
+            {challengeData && (
+              <div className="mb-4">
+                <ChallengeStatusBar challenge={challengeData} isChallenger={isChallenger} />
               </div>
             )}
 
-            {gameState.status === 'playing' ? (
-              <form onSubmit={handleGuess} className="flex gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder={t('game.input.placeholder')}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
-                    autoFocus
-                    disabled={submitting}
-                  />
-                </div>
+            <HeatBar score={gameState.bestScore} temperature={getTemperature(gameState.bestScore)} />
 
-                <button
-                  type="submit"
-                  disabled={!input.trim() || submitting}
-                  className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-xl px-5 flex items-center justify-center transition-all shadow-lg shadow-blue-600/20"
-                >
-                  {submitting ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
-                </button>
-              </form>
-            ) : null}
+            {/* Game Area */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide mb-4 min-h-[200px] pb-20">
 
-            {/* Action Bar */}
-            <div className="flex justify-between items-center mt-3">
-              <button
-                onClick={() => setIsHintMenuOpen(true)}
-                disabled={gameState.status !== 'playing'}
-                className="flex items-center gap-1.5 text-xs font-bold text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition-colors"
-              >
-                <div className="p-1.5 bg-yellow-500/10 rounded-lg"><Lightbulb size={14} /></div>
-                <span>Get Hint</span>
-              </button>
-
-              {/* Surrender Button */}
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={handleSurrender}
-                  disabled={gameState.status !== 'playing'}
-                  className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest transition-colors ${surrenderConfirm ? 'text-red-500 hover:text-red-400 animate-pulse' : 'text-slate-500 hover:text-slate-300'}`}
-                >
-                  {surrenderConfirm ? (
-                    <>
-                      <AlertTriangle size={12} /> Confirm
-                    </>
-                  ) : (
-                    <>
-                      <Flag size={12} /> {mode === 'tutorial' ? 'Skip' : t('game.giveup')}
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hint Selection Modal */}
-        {isHintMenuOpen && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-pop" onClick={() => setIsHintMenuOpen(false)}>
-            <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
-
-              {/* Modal Header */}
-              <div className="p-5 border-b border-slate-800 bg-slate-900 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center text-yellow-400">
-                    <Lightbulb size={18} strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Need a Clue?</h3>
-                </div>
-                <button onClick={() => setIsHintMenuOpen(false)} className="text-slate-500 hover:text-white">
-                  <X size={20} />
-                </button>
-              </div>
-
-              {/* Tabs */}
-              <div className="p-2 bg-slate-950/50">
-                <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                  <button
-                    onClick={() => setHintMenuTab('clues')}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${hintMenuTab === 'clues' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-                  >
-                    Hints
-                  </button>
-                  <button
-                    onClick={() => setHintMenuTab('items')}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${hintMenuTab === 'items' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-                  >
-                    Power-ups
-                  </button>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 overflow-y-auto">
-                {hintLoading ? (
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <Loader2 size={32} className="text-yellow-500 animate-spin mb-2" />
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Thinking...</span>
-                  </div>
-                ) : (
-                  <>
-                    {hintMenuTab === 'clues' && (
-                      <div className="space-y-3">
-                        <button
-                          onClick={() => buyHint('word')}
-                          disabled={profile.coins < getHintCost('word')}
-                          className="w-full p-4 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-between group transition-all"
-                        >
-                          <div className="text-left">
-                            <div className="font-bold text-white text-sm">Word Hint</div>
-                            <div className="text-xs text-slate-500">Single related word</div>
-                          </div>
-                          <div className="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800 group-hover:border-yellow-500/50 transition-colors">
-                            <span className={`text-sm font-bold ${profile.coins < getHintCost('word') ? 'text-red-400' : 'text-yellow-400'}`}>{getHintCost('word')}</span>
-                            <Coins size={12} className="text-yellow-500" fill="#facc15" />
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => buyHint('sentence')}
-                          disabled={profile.coins < getHintCost('sentence')}
-                          className="w-full p-4 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-between group transition-all"
-                        >
-                          <div className="text-left">
-                            <div className="font-bold text-white text-sm">Sentence Hint</div>
-                            <div className="text-xs text-slate-500">Riddle-style description</div>
-                          </div>
-                          <div className="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800 group-hover:border-yellow-500/50 transition-colors">
-                            <span className={`text-sm font-bold ${profile.coins < getHintCost('sentence') ? 'text-red-400' : 'text-yellow-400'}`}>{getHintCost('sentence')}</span>
-                            <Coins size={12} className="text-yellow-500" fill="#facc15" />
-                          </div>
-                        </button>
-                      </div>
-                    )}
-
-                    {hintMenuTab === 'items' && (
-                      <div className="space-y-3">
-                        {['letter_spy', 'compass', 'time_freeze'].map(itemId => {
-                          const item = CONSUMABLES[itemId];
-                          const count = profile.inventory[itemId] || 0;
-                          const disabled = mode !== 'blitz' && itemId === 'time_freeze';
-
-                          return (
-                            <div
-                              key={itemId}
-                              className={`p-4 bg-slate-800 border border-slate-700 rounded-2xl flex items-center gap-3 transition-all ${disabled ? 'opacity-50 grayscale' : 'hover:border-slate-600'}`}
-                            >
-                              <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-300">
-                                <Icon name={item.icon} size={20} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex justify-between">
-                                  <h4 className="font-bold text-white text-sm">{item.name}</h4>
-                                  <span className={`text-[10px] font-bold px-1.5 rounded ${count > 0 ? 'bg-indigo-500/20 text-indigo-300' : 'bg-slate-900 text-slate-500'}`}>x{count}</span>
-                                </div>
-                                <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{item.description}</p>
-                              </div>
-                              <button
-                                onClick={() => handleUsePowerup(itemId)}
-                                disabled={disabled}
-                                className={`h-8 px-3 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${disabled
-                                  ? 'bg-slate-900 text-slate-600 cursor-not-allowed'
-                                  : count > 0
-                                    ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/20'
-                                    : 'bg-slate-700 text-white hover:bg-slate-600 border border-slate-600'
-                                  }`}
-                              >
-                                {disabled ? 'N/A' : count > 0 ? 'Use' : (
-                                  <div className="flex items-center gap-1">
-                                    <span>Buy</span>
-                                    <span className="text-yellow-400">{item.price}</span>
-                                  </div>
-                                )}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {hintMenuTab === 'items' && (
-                <div className="p-3 bg-slate-950/50 border-t border-slate-800 text-center">
-                  <button onClick={() => navigate('/home')} className="text-xs text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1 font-bold">
-                    <Backpack size={12} /> Go to Full Shop
-                  </button>
+              {/* Loading State */}
+              {gameState.loading && (
+                <div className="flex flex-col items-center justify-center h-40 gap-4">
+                  <Loader2 size={32} className="animate-spin text-blue-500" />
+                  <p className="text-slate-400 text-sm animate-pulse">Generating semantic field...</p>
                 </div>
               )}
+
+              {/* Hints Display Stack */}
+              {gameState.hints.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  {gameState.hints.map((h, idx) => (
+                    <div key={idx} className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex gap-3 items-start animate-pop">
+                      <Lightbulb size={16} className="text-yellow-500 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <span className="text-[10px] font-bold uppercase text-yellow-600/80 block mb-0.5">
+                          {h.type === 'word' ? 'Word Hint' : 'Sentence Hint'}
+                        </span>
+                        <div className="text-sm text-yellow-100 italic">"{h.text}"</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Win/Loss State */}
+              {gameState.status !== 'playing' && (
+                <div className="mb-6 p-6 bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl text-center animate-pop shadow-2xl">
+                  <h2 className="text-3xl font-black mb-2">
+                    {gameState.status === 'won' ? 'VICTORY!' : 'GAME OVER'}
+                  </h2>
+                  <div className="text-sm text-slate-400 mb-4">The secret word was:</div>
+                  <div className="text-4xl font-black bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-6 uppercase tracking-widest">
+                    {gameState.targetWord}
+                  </div>
+
+                  {gameState.status === 'won' && gameState.recap && (
+                    <div className="text-sm text-slate-300 italic mb-6 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                      "{gameState.recap}"
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all flex items-center gap-2"
+                    >
+                      <RotateCcw size={18} /> Play Again
+                    </button>
+                    <button
+                      onClick={handleShare}
+                      className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all flex items-center gap-2 border border-slate-600"
+                    >
+                      <Share2 size={18} /> Share
+                    </button>
+                  </div>
+
+                  {/* Related Words */}
+                  {gameState.relatedWords && gameState.relatedWords.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-slate-700">
+                      <div className="text-xs font-bold uppercase text-slate-500 mb-3">Similar Words</div>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {gameState.relatedWords.map(w => (
+                          <span key={w} className="px-2 py-1 bg-slate-900 rounded text-xs text-slate-300 border border-slate-800">
+                            {w}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Guess History */}
+              <div className="space-y-3">
+                {sortedGuesses.map((guess, idx) => (
+                  <GuessRow
+                    key={guess.timestamp}
+                    guess={guess}
+                    isBest={guess.score === gameState.bestScore && guess.score > 0}
+                    listIndex={idx + 1}
+                  />
+                ))}
+
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Tutorial Overlay */}
-        {isTutorialOpen && (
-          <TutorialOverlay onClose={() => setIsTutorialOpen(false)} />
-        )}
+            {/* Input Area - Fixed Bottom */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-950/80 backdrop-blur-md border-t border-slate-800">
+              <div className="max-w-2xl mx-auto">
 
-        <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} mode={mode} />
-        <ShareModal
-          isOpen={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          gameState={gameState}
-          mode={mode}
-          username={profile.username || 'Player'}
-        />
+                {/* Masked Word (From Letter Spy) */}
+                {maskedWord && gameState.status === 'playing' && (
+                  <div className="text-center mb-3 animate-pop">
+                    <span className="inline-block px-4 py-1.5 bg-slate-900 border border-emerald-500/30 rounded-lg text-emerald-400 font-mono text-lg font-bold tracking-[0.3em] shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                      {maskedWord}
+                    </span>
+                  </div>
+                )}
 
-        {/* Challenge Result Modal */}
-        {challengeData && (
-          <ChallengeResultModal
-            isOpen={showChallengeResult}
-            challenge={challengeData}
-            isChallenger={isChallenger}
-            onClose={() => {
-              setShowChallengeResult(false);
-              navigate('/home');
-            }}
-          />
-        )}
-      </main>
+                {gameState.status === 'playing' ? (
+                  <form onSubmit={handleGuess} className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder={t('game.input.placeholder')}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
+                        autoFocus
+                        disabled={submitting}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={!input.trim() || submitting}
+                      className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-xl px-5 flex items-center justify-center transition-all shadow-lg shadow-blue-600/20"
+                    >
+                      {submitting ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+                    </button>
+                  </form>
+                ) : null}
+
+                {/* Action Bar */}
+                <div className="flex justify-between items-center mt-3">
+                  <button
+                    onClick={() => setIsHintMenuOpen(true)}
+                    disabled={gameState.status !== 'playing'}
+                    className="flex items-center gap-1.5 text-xs font-bold text-yellow-500 hover:text-yellow-400 disabled:opacity-50 transition-colors"
+                  >
+                    <div className="p-1.5 bg-yellow-500/10 rounded-lg"><Lightbulb size={14} /></div>
+                    <span>Get Hint</span>
+                  </button>
+
+                  {/* Surrender Button */}
+                  <div className="flex justify-center gap-4">
+                    <button
+                      onClick={handleSurrender}
+                      disabled={gameState.status !== 'playing'}
+                      className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest transition-colors ${surrenderConfirm ? 'text-red-500 hover:text-red-400 animate-pulse' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                      {surrenderConfirm ? (
+                        <>
+                          <AlertTriangle size={12} /> Confirm
+                        </>
+                      ) : (
+                        <>
+                          <Flag size={12} /> {mode === 'tutorial' ? 'Skip' : t('game.giveup')}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Hint Selection Modal */}
+            {isHintMenuOpen && (
+              <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-pop" onClick={() => setIsHintMenuOpen(false)}>
+                <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+
+                  {/* Modal Header */}
+                  <div className="p-5 border-b border-slate-800 bg-slate-900 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center text-yellow-400">
+                        <Lightbulb size={18} strokeWidth={2.5} />
+                      </div>
+                      <h3 className="text-lg font-bold text-white">Need a Clue?</h3>
+                    </div>
+                    <button onClick={() => setIsHintMenuOpen(false)} className="text-slate-500 hover:text-white">
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="p-2 bg-slate-950/50">
+                    <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
+                      <button
+                        onClick={() => setHintMenuTab('clues')}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${hintMenuTab === 'clues' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                      >
+                        Hints
+                      </button>
+                      <button
+                        onClick={() => setHintMenuTab('items')}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${hintMenuTab === 'items' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                      >
+                        Power-ups
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6 overflow-y-auto">
+                    {hintLoading ? (
+                      <div className="flex flex-col items-center justify-center py-8">
+                        <Loader2 size={32} className="text-yellow-500 animate-spin mb-2" />
+                        <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Thinking...</span>
+                      </div>
+                    ) : (
+                      <>
+                        {hintMenuTab === 'clues' && (
+                          <div className="space-y-3">
+                            <button
+                              onClick={() => buyHint('word')}
+                              disabled={profile.coins < getHintCost('word')}
+                              className="w-full p-4 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-between group transition-all"
+                            >
+                              <div className="text-left">
+                                <div className="font-bold text-white text-sm">Word Hint</div>
+                                <div className="text-xs text-slate-500">Single related word</div>
+                              </div>
+                              <div className="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800 group-hover:border-yellow-500/50 transition-colors">
+                                <span className={`text-sm font-bold ${profile.coins < getHintCost('word') ? 'text-red-400' : 'text-yellow-400'}`}>{getHintCost('word')}</span>
+                                <Coins size={12} className="text-yellow-500" fill="#facc15" />
+                              </div>
+                            </button>
+
+                            <button
+                              onClick={() => buyHint('sentence')}
+                              disabled={profile.coins < getHintCost('sentence')}
+                              className="w-full p-4 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-between group transition-all"
+                            >
+                              <div className="text-left">
+                                <div className="font-bold text-white text-sm">Sentence Hint</div>
+                                <div className="text-xs text-slate-500">Riddle-style description</div>
+                              </div>
+                              <div className="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800 group-hover:border-yellow-500/50 transition-colors">
+                                <span className={`text-sm font-bold ${profile.coins < getHintCost('sentence') ? 'text-red-400' : 'text-yellow-400'}`}>{getHintCost('sentence')}</span>
+                                <Coins size={12} className="text-yellow-500" fill="#facc15" />
+                              </div>
+                            </button>
+                          </div>
+                        )}
+
+                        {hintMenuTab === 'items' && (
+                          <div className="space-y-3">
+                            {['letter_spy', 'compass', 'time_freeze'].map(itemId => {
+                              const item = CONSUMABLES[itemId];
+                              const count = profile.inventory[itemId] || 0;
+                              const disabled = mode !== 'blitz' && itemId === 'time_freeze';
+
+                              return (
+                                <div
+                                  key={itemId}
+                                  className={`p-4 bg-slate-800 border border-slate-700 rounded-2xl flex items-center gap-3 transition-all ${disabled ? 'opacity-50 grayscale' : 'hover:border-slate-600'}`}
+                                >
+                                  <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-300">
+                                    <Icon name={item.icon} size={20} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between">
+                                      <h4 className="font-bold text-white text-sm">{item.name}</h4>
+                                      <span className={`text-[10px] font-bold px-1.5 rounded ${count > 0 ? 'bg-indigo-500/20 text-indigo-300' : 'bg-slate-900 text-slate-500'}`}>x{count}</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{item.description}</p>
+                                  </div>
+                                  <button
+                                    onClick={() => handleUsePowerup(itemId)}
+                                    disabled={disabled}
+                                    className={`h-8 px-3 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${disabled
+                                      ? 'bg-slate-900 text-slate-600 cursor-not-allowed'
+                                      : count > 0
+                                        ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/20'
+                                        : 'bg-slate-700 text-white hover:bg-slate-600 border border-slate-600'
+                                      }`}
+                                  >
+                                    {disabled ? 'N/A' : count > 0 ? 'Use' : (
+                                      <div className="flex items-center gap-1">
+                                        <span>Buy</span>
+                                        <span className="text-yellow-400">{item.price}</span>
+                                      </div>
+                                    )}
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {hintMenuTab === 'items' && (
+                    <div className="p-3 bg-slate-950/50 border-t border-slate-800 text-center">
+                      <button onClick={() => navigate('/home')} className="text-xs text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1 font-bold">
+                        <Backpack size={12} /> Go to Full Shop
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Tutorial Overlay */}
+            {isTutorialOpen && (
+              <TutorialOverlay onClose={() => setIsTutorialOpen(false)} />
+            )}
+
+            <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} mode={mode} />
+            <ShareModal
+              isOpen={showShareModal}
+              onClose={() => setShowShareModal(false)}
+              gameState={gameState}
+              mode={mode}
+              username={profile.username || 'Player'}
+            />
+
+            {/* Challenge Result Modal */}
+            {challengeData && (
+              <ChallengeResultModal
+                isOpen={showChallengeResult}
+                challenge={challengeData}
+                isChallenger={isChallenger}
+                onClose={() => {
+                  setShowChallengeResult(false);
+                  navigate('/home');
+                }}
+              />
+            )}
+          </main>
     </div>
   );
 };
