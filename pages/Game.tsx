@@ -115,13 +115,84 @@ const Game: React.FC = () => {
 
 
 
+  const [showPassOverlay, setShowPassOverlay] = useState(false);
+
+  // Party Mode State
+  const [partyState, setPartyState] = useState({
+    currentPlayer: 1,
+    totalPlayers: 2,
+    isTeamMode: false,
+    isSetterMode: false, // True if Player 1 set a custom word (Setter vs Solver)
+    playerNames: ['Player 1', 'Player 2']
+  });
+
   // Initialize Game
   useEffect(() => {
     const initGame = async () => {
       setGameState(prev => ({ ...prev, loading: true }));
 
+      // Parse Party Params
+      const playersParam = parseInt(searchParams.get('players') || '2');
+      const teamsParam = searchParams.get('teams') === 'true';
+      const customWordParam = searchParams.get('word');
+      const namesParam = searchParams.get('names');
+
+      let isSetter = false;
+      let initialPlayer = 1;
+      let names = Array.from({ length: playersParam }, (_, i) => `Player ${i + 1}`);
+
+      if (teamsParam) {
+        names = ['Team Red', 'Team Blue'];
+      }
+
+      // Override with custom names if present
+      if (namesParam) {
+        try {
+          const decodedNames = decodeURIComponent(namesParam).split(',');
+          // Fill up to required length, fallback to defaults if empty strings
+          names = names.map((defaultName, i) => decodedNames[i] || defaultName);
+        } catch (e) {
+          console.error("Failed to parse names", e);
+        }
+      }
+
+      // Check for custom word (Pass & Play)
       let target = '';
+      if (customWordParam) {
+        try {
+          target = atob(customWordParam).toLowerCase();
+          isSetter = true;
+          initialPlayer = 2; // Player 2 (Solver) starts
+        } catch (e) {
+          console.error("Failed to decode custom word", e);
+        }
+      }
+
+      setPartyState({
+        currentPlayer: initialPlayer,
+        totalPlayers: playersParam,
+        isTeamMode: teamsParam,
+        isSetterMode: isSetter,
+        playerNames: names
+      });
+
+      // Check for Pass & Play mode
+      if (mode === 'party') {
+        setShowPassOverlay(true);
+      }
+
       let seed = undefined;
+
+      if (target) {
+        // Custom word already set
+        setGameState(prev => ({
+          ...prev,
+          targetWord: target,
+          loading: false,
+          status: 'playing'
+        }));
+        return;
+      }
 
       if (mode === 'daily') {
         // Use date as seed
@@ -411,6 +482,15 @@ const Game: React.FC = () => {
 
       if (result.score === 100) {
         handleWin(newGuess);
+      } else {
+        // Handle Turn Switching for Party Mode (Random Word)
+        if (mode === 'party' && !partyState.isSetterMode) {
+          setPartyState(prev => {
+            const nextPlayer = prev.currentPlayer >= prev.totalPlayers ? 1 : prev.currentPlayer + 1;
+            return { ...prev, currentPlayer: nextPlayer };
+          });
+          setShowPassOverlay(true);
+        }
       }
 
     } catch (error) {
@@ -655,6 +735,11 @@ const Game: React.FC = () => {
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-400 bg-slate-900/50 px-2 py-1 rounded border border-slate-800">
                   {mode === 'unlimited' ? (category === 'common' ? 'Quick Play' : category) : mode}
                 </span>
+                {mode === 'party' && (
+                  <span className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded border border-slate-800 ${partyState.isTeamMode ? (partyState.currentPlayer === 1 ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400') : 'bg-emerald-500/20 text-emerald-400'}`}>
+                    {partyState.playerNames[partyState.currentPlayer - 1]}'s Turn
+                  </span>
+                )}
               </div>
               {mode === 'blitz' && (
                 <div className={`text-xl font-mono font-bold ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
@@ -968,6 +1053,34 @@ const Game: React.FC = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Pass & Play Overlay */}
+            {showPassOverlay && (
+              <div className="fixed inset-0 z-[200] bg-slate-950 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+                <div className="w-24 h-24 bg-gradient-to-br from-red-500 to-orange-600 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-red-500/20 mb-8 animate-bounce-slow">
+                  <Icon name="Smartphone" size={48} strokeWidth={1.5} />
+                </div>
+
+                <h2 className="text-3xl font-black text-white mb-4">Pass the Device!</h2>
+
+                <p className="text-slate-400 text-lg mb-12 max-w-xs leading-relaxed">
+                  Pass to <span className={`text-white font-bold ${partyState.isTeamMode ? (partyState.currentPlayer === 1 ? 'text-red-400' : 'text-blue-400') : ''}`}>
+                    {partyState.playerNames[partyState.currentPlayer - 1]}
+                  </span>
+                  <br /><br />
+                  <span className="text-sm text-slate-500 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">
+                    {partyState.isSetterMode ? "Don't peek at the secret word! 🙈" : "Your turn to guess! 🎲"}
+                  </span>
+                </p>
+
+                <button
+                  onClick={() => setShowPassOverlay(false)}
+                  className="w-full max-w-xs py-4 bg-white text-slate-900 font-black text-lg rounded-2xl hover:scale-105 transition-transform shadow-xl shadow-white/10 flex items-center justify-center gap-2"
+                >
+                  I'm Ready <Icon name="ArrowRight" size={20} />
+                </button>
               </div>
             )}
 

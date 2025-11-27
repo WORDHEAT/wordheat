@@ -17,6 +17,7 @@ export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOp
   const [word, setWord] = useState('');
   const [generatedLink, setGeneratedLink] = useState('');
   const [copied, setCopied] = useState(false);
+  const [playerNames, setPlayerNames] = useState<string[]>(['', '', '', '']);
   const [sentTo, setSentTo] = useState<string[]>([]);
 
   if (!isOpen) return null;
@@ -37,6 +38,13 @@ export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOp
       let url = `/game?mode=party&players=${playerCount}`;
       if (encodedWord) url += `&word=${encodedWord}`;
       if (isTeam) url += `&teams=true`;
+
+      // Add names param
+      const activeNames = playerNames.slice(0, isTeam ? 2 : playerCount).map(n => n.trim());
+      // Filter out empty names to let Game.tsx handle defaults, or send them all
+      if (activeNames.some(n => n)) {
+        url += `&names=${encodeURIComponent(activeNames.join(','))}`;
+      }
 
       navigate(url);
       onClose();
@@ -112,6 +120,13 @@ export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOp
     setGeneratedLink('');
     setCopied(false);
     setSentTo([]);
+    setPlayerNames(['', '', '', '']);
+  };
+
+  const handleNameChange = (index: number, value: string) => {
+    const newNames = [...playerNames];
+    newNames[index] = value;
+    setPlayerNames(newNames);
   };
 
   return (
@@ -185,14 +200,71 @@ export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOp
               </div>
 
               <div className="p-6 pt-0 bg-slate-900">
-                <p className="text-slate-400 text-sm mb-6 leading-relaxed text-center bg-slate-800/30 p-3 rounded-xl border border-slate-800/50">
-                  {playMode === 'local'
-                    ? gameType === 'battle4' ? "Pass the device! 4 Players guess the word in turns." :
-                      gameType === '2v2' ? "Team Red vs Team Blue. Pass device between teams." :
-                        "Classic duel. Player 1 sets word (optional), Player 2 guesses."
-                    : "Generate a unique link to send to your friends via WhatsApp, Messenger, or in-game chat."
-                  }
-                </p>
+                {playMode === 'local' ? (
+                  <div className="mb-6 space-y-3">
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      {gameType === '2v2' ? 'Team Names' : 'Player Names'}
+                    </div>
+
+                    {gameType === '1v1' && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="text"
+                          value={playerNames[0]}
+                          onChange={(e) => handleNameChange(0, e.target.value)}
+                          placeholder="Player 1"
+                          className="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 transition-colors text-center"
+                        />
+                        <input
+                          type="text"
+                          value={playerNames[1]}
+                          onChange={(e) => handleNameChange(1, e.target.value)}
+                          placeholder="Player 2"
+                          className="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors text-center"
+                        />
+                      </div>
+                    )}
+
+                    {gameType === '2v2' && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="text"
+                          value={playerNames[0]}
+                          onChange={(e) => handleNameChange(0, e.target.value)}
+                          placeholder="Team Red"
+                          className="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 transition-colors text-center"
+                        />
+                        <input
+                          type="text"
+                          value={playerNames[1]}
+                          onChange={(e) => handleNameChange(1, e.target.value)}
+                          placeholder="Team Blue"
+                          className="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors text-center"
+                        />
+                      </div>
+                    )}
+
+                    {gameType === 'battle4' && (
+                      <div className="grid grid-cols-2 gap-3">
+                        {[0, 1, 2, 3].map(i => (
+                          <input
+                            key={i}
+                            type="text"
+                            value={playerNames[i]}
+                            onChange={(e) => handleNameChange(i, e.target.value)}
+                            placeholder={`Player ${i + 1}`}
+                            className="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors text-center"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-slate-400 text-sm mb-6 leading-relaxed text-center bg-slate-800/30 p-3 rounded-xl border border-slate-800/50">
+                    Generate a unique link to send to your friends via WhatsApp, Messenger, or in-game chat.
+                  </p>
+                )}
+
                 <form onSubmit={handleCreate}>
                   <div className="relative mb-6 group">
                     <input
@@ -201,7 +273,6 @@ export const ChallengeCreateModal: React.FC<ChallengeCreateModalProps> = ({ isOp
                       onChange={(e) => setWord(e.target.value)}
                       placeholder=" "
                       className="peer w-full bg-slate-950 border border-slate-700 rounded-2xl px-6 py-4 text-white text-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all placeholder-transparent text-center font-bold"
-                      autoFocus={playMode === 'local'}
                     />
                     <label className="absolute left-1/2 -translate-x-1/2 top-4 text-slate-500 text-lg transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-3 peer-focus:text-xs peer-focus:bg-slate-900 peer-focus:px-2 peer-focus:text-red-500 pointer-events-none peer-not-placeholder-shown:-top-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:bg-slate-900 peer-not-placeholder-shown:px-2 whitespace-nowrap">
                       Secret Word (Optional)
